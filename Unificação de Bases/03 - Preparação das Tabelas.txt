@@ -1,0 +1,1038 @@
+-- IMPORTAÇÃO INICIAL - EMPRESAS, ESTABELECIMENTOS, DEPARTAMENTOS E LOTAÇÕES.
+
+-- Importação de ns.gruposempresariais não existentes
+
+WITH inserir AS (
+	INSERT INTO ns.gruposempresariais (codigo, descricao, usagrade, grupoempresarial, lastupdate, modogestaopatrimonial, tenant)
+	SELECT ge1.codigo, ge1.descricao, ge1.usagrade, ge1.grupoempresarial, ge1.lastupdate, ge1.modogestaopatrimonial, ge1.tenant
+	FROM nsmigration.gruposempresariais ge1
+	LEFT JOIN ns.gruposempresariais ge2 ON ge1.codigo = ge2.codigo
+	WHERE ge2.grupoempresarial IS NULL
+	RETURNING *
+)
+SELECT ns.criargrupoempresarial(grupoempresarial) FROM inserir;
+
+-- Importação de ns.empresas não existentes
+
+WITH inserir AS (
+	INSERT INTO ns.empresas (codigo, descricao, tipoidentificacao, raizcnpj, ordemcnpj, cpf, razaosocial, mascaraconta, mascaragerencial, usadv, filantropica, cnae, naturezajuridica, tipopagamento, tipocooperativa, tipoconstrutora, numerocertificado, ministerio, dataemissaocertificado, datavencimentocertificado, numeroprotocolorenovacao, dataprotocolorenovacao, datapublicacaodou, numeropaginadou, nomecontato, cpfcontato, telefonefixocontato, dddtelfixocontato, telefonecelularcontato, dddtelcelularcontato, faxcontato, dddfaxcontato, emailcontato, inativa, inicioexercicio, logotipo, imagemoriginal, infoimagem, empresa, grupoempresarial, moeda, idweb, perfil, inicio_atividades, tributacaopiscofins, alelonumerocontrato, tipopontoeletronico, multiplastabelasrubrica, numerosiafi, acordointernacionalisencaomulta, tiposituacaopj, tiposituacaopf, regimeproprioprevidenciasocial, municipioentefederativo, descricaoleiseguradodiferenciado, valorsubtetoexecutivo, valorsubtetolegislativo, valorsubtetojudiciario, valorsubtetotodospoderes, anosmaioridadedependenteexecutivo, anosmaioridadedependentelegislativo, anosmaioridadedependentejudiciario, anosmaioridadedependentetodospoderes, lastupdate, observacao)
+	SELECT emp1.codigo, emp1.descricao, emp1.tipoidentificacao, emp1.raizcnpj, emp1.ordemcnpj, emp1.cpf, emp1.razaosocial, emp1.mascaraconta, emp1.mascaragerencial, emp1.usadv, emp1.filantropica, emp1.cnae, emp1.naturezajuridica, emp1.tipopagamento, emp1.tipocooperativa, emp1.tipoconstrutora, emp1.numerocertificado, emp1.ministerio, emp1.dataemissaocertificado, emp1.datavencimentocertificado, emp1.numeroprotocolorenovacao, emp1.dataprotocolorenovacao, emp1.datapublicacaodou, emp1.numeropaginadou, emp1.nomecontato, emp1.cpfcontato, emp1.telefonefixocontato, emp1.dddtelfixocontato, emp1.telefonecelularcontato, emp1.dddtelcelularcontato, emp1.faxcontato, emp1.dddfaxcontato, emp1.emailcontato, emp1.inativa, emp1.inicioexercicio, emp1.logotipo, emp1.imagemoriginal, emp1.infoimagem, emp1.empresa, (SELECT ge1.grupoempresarial FROM ns.gruposempresariais ge1 INNER JOIN nsmigration.gruposempresariais ge2 ON ge1.codigo = ge2.codigo WHERE ge2.grupoempresarial = emp1.grupoempresarial), emp1.moeda, emp1.idweb, emp1.perfil, emp1.inicio_atividades, emp1.tributacaopiscofins, emp1.alelonumerocontrato, emp1.tipopontoeletronico, emp1.multiplastabelasrubrica, emp1.numerosiafi, emp1.acordointernacionalisencaomulta, emp1.tiposituacaopj, emp1.tiposituacaopf, emp1.regimeproprioprevidenciasocial, emp1.municipioentefederativo, emp1.descricaoleiseguradodiferenciado, emp1.valorsubtetoexecutivo, emp1.valorsubtetolegislativo, emp1.valorsubtetojudiciario, emp1.valorsubtetotodospoderes, emp1.anosmaioridadedependenteexecutivo, emp1.anosmaioridadedependentelegislativo, emp1.anosmaioridadedependentejudiciario, emp1.anosmaioridadedependentetodospoderes, emp1.lastupdate, emp1.observacao
+	FROM nsmigration.empresas emp1
+	LEFT JOIN ns.empresas emp2 ON emp1.ordemcnpj = emp2.ordemcnpj AND emp1.raizcnpj = emp2.raizcnpj
+	WHERE emp2.empresa IS NULL
+	RETURNING *
+)
+SELECT ns.criarempresa(empresa) FROM inserir;
+
+-- Importação de ns.contadores não existentes
+
+INSERT INTO ns.contadores (codigo, nome, logradouro, numero, complemento, bairro, cep, cidade, ibge, telefone, dddtel, cpf, crc, estadocrc, tipocontador, dataregcrc, fax, dddfax, email, identidade, datavalidadedhpc, contador, lastupdate)
+SELECT cont1.codigo, cont1.nome, cont1.logradouro, cont1.numero, cont1.complemento, cont1.bairro, cont1.cep, cont1.cidade, cont1.ibge, cont1.telefone, cont1.dddtel, cont1.cpf, cont1.crc, cont1.estadocrc, cont1.tipocontador, cont1.dataregcrc, cont1.fax, cont1.dddfax, cont1.email, cont1.identidade, cont1.datavalidadedhpc, cont1.contador, cont1.lastupdate
+FROM nsmigration.contadores cont1
+LEFT JOIN ns.contadores cont2 ON cont1.cpf = cont2.cpf
+WHERE cont2.contador IS NULL;
+
+-- Importação de ns.estabelecimentos não existentes
+
+UPDATE nsmigration.estabelecimentos
+SET empresa = empresa1.empresa 
+FROM ns.empresas empresa1, nsmigration.empresas empresa2
+WHERE estabelecimentos.empresa = empresa2.empresa
+AND empresa2.ordemcnpj = empresa1.ordemcnpj
+AND empresa2.raizcnpj = empresa1.raizcnpj;
+
+WITH inserir AS (
+	INSERT INTO ns.estabelecimentos (codigo, descricao, tipoidentificacao, raizcnpj, ordemcnpj, cpf, caepf, cidade, inscricaoestadual, inscricaomunicipal, nomefantasia, email, site, tipologradouro, logradouro, numero, complemento, bairro, cep, tiposimples, dddtel, telefone, dddfax, fax, bloqueado, selecionarcfop, ramoatividade, qualificacao, naturezapj, anofiscal, inicio_atividades, final_atividades, dataregistro, suframa, atividademunicipal, atividadeestadual, registro, representante, cpfrepresentante, dddtelrepresentante, telefonerepresentante, ramalrepresentante, dddfaxrepresentante, faxrepresentante, emailrepresentante, caixapostal, ufcaixapostal, cepcaixapostal, fpas, acidentetrabalho, numeroproprietarios, numerofamiliares, numeroconta, tipopagamento, codigoterceiros, porte, fazpartepat, aliquotafilantropica, capitalsocial, observacao, pagapis, tipoconta, inicioexercicio, cei, datanascimentorepresentante, sexorepresentante, contacorrentepagadora, ibge, cnae, identificacaoregistro, agencia, contador, empresa, estabelecimento, contribuinteipi, sindicato, tipocontroleponto, centralizacontribuicaosindical, nomecontato, cpfcontato, telefonefixocontato, dddtelfixocontato, telefonecelularcontato, dddtelcelularcontato, faxcontato, dddfaxcontato, emailcontato, excessosublimite, aliquotaaplicavel, logotipo, alelocodigopessoajuridica, alelonumerofilial, lastupdate, nisrepresentante, dataimplantacaosaldo)
+	SELECT est1.codigo, est1.descricao, est1.tipoidentificacao, est1.raizcnpj, est1.ordemcnpj, est1.cpf, est1.caepf, est1.cidade, est1.inscricaoestadual, est1.inscricaomunicipal, est1.nomefantasia, est1.email, est1.site, est1.tipologradouro, est1.logradouro, est1.numero, est1.complemento, est1.bairro, est1.cep, est1.tiposimples, est1.dddtel, est1.telefone, est1.dddfax, est1.fax, est1.bloqueado, est1.selecionarcfop, est1.ramoatividade, est1.qualificacao, est1.naturezapj, est1.anofiscal, est1.inicio_atividades, est1.final_atividades, est1.dataregistro, est1.suframa, est1.atividademunicipal, est1.atividadeestadual, est1.registro, est1.representante, est1.cpfrepresentante, est1.dddtelrepresentante, est1.telefonerepresentante, est1.ramalrepresentante, est1.dddfaxrepresentante, est1.faxrepresentante, est1.emailrepresentante, est1.caixapostal, est1.ufcaixapostal, est1.cepcaixapostal, est1.fpas, est1.acidentetrabalho, est1.numeroproprietarios, est1.numerofamiliares, est1.numeroconta, est1.tipopagamento, est1.codigoterceiros, est1.porte, est1.fazpartepat, est1.aliquotafilantropica, est1.capitalsocial, est1.observacao, est1.pagapis, est1.tipoconta, est1.inicioexercicio, est1.cei, est1.datanascimentorepresentante, est1.sexorepresentante, est1.contacorrentepagadora, est1.ibge, est1.cnae, est1.identificacaoregistro, est1.agencia, (SELECT cont1.contador FROM ns.contadores cont1 INNER JOIN nsmigration.contadores cont2 ON cont1.cpf = cont2.cpf WHERE cont2.contador = est1.contador), est1.empresa, est1.estabelecimento, est1.contribuinteipi, est1.sindicato, est1.tipocontroleponto, est1.centralizacontribuicaosindical, est1.nomecontato, est1.cpfcontato, est1.telefonefixocontato, est1.dddtelfixocontato, est1.telefonecelularcontato, est1.dddtelcelularcontato, est1.faxcontato, est1.dddfaxcontato, est1.emailcontato, est1.excessosublimite, est1.aliquotaaplicavel, est1.logotipo, est1.alelocodigopessoajuridica, est1.alelonumerofilial, est1.lastupdate, est1.nisrepresentante, est1.dataimplantacaosaldo
+	FROM nsmigration.estabelecimentos est1
+	LEFT JOIN ns.estabelecimentos est2 ON est1.ordemcnpj = est2.ordemcnpj AND est1.raizcnpj = est2.raizcnpj
+	WHERE est2.estabelecimento IS NULL
+	RETURNING *
+)
+SELECT ns.criarestabelecimento(estabelecimento) FROM inserir;
+
+-- Importação de persona.departamentos não existentes
+
+UPDATE personamigration.departamentos
+SET estabelecimento = depart1.estabelecimento
+FROM ns.estabelecimentos depart1, nsmigration.estabelecimentos depart2
+WHERE departamentos.estabelecimento = depart2.estabelecimento 
+AND depart2.raizcnpj = depart1.raizcnpj
+AND depart2.ordemcnpj = depart1.ordemcnpj;
+
+INSERT INTO persona.departamentos (codigo, nome, centrocustonasajon, ccustopersona, classefinpersona, classefinnasajon, estabelecimento, departamento, nomeresponsavel, lastupdate)
+SELECT dpt1.codigo, dpt1.nome, dpt1.centrocustonasajon, dpt1.ccustopersona, dpt1.classefinpersona, dpt1.classefinnasajon, dpt1.estabelecimento, dpt1.departamento, dpt1.nomeresponsavel,dpt1.lastupdate
+FROM personamigration.departamentos dpt1
+LEFT JOIN persona.departamentos dpt2 ON dpt1.codigo = dpt2.codigo 
+AND dpt1.estabelecimento = dpt2.estabelecimento
+WHERE dpt2.departamento IS NULL; 
+
+-- IMPORTAÇÃO DE 'NS.PESSOAS' E TABELAS ESSENCIAIS PARA A MESMA
+
+-- TABLE ns.cadastros
+
+INSERT INTO ns.cadastros(tipo,codigo,cadastro,lastupdate)
+Select grup.tipo,grup.codigo,grup.cadastro,grup.lastupdate
+FROM nsmigration.cadastros grup
+LEFT JOIN ns.cadastros grup1 ON grup.cadastro = grup1.cadastro
+WHERE grup1.cadastro IS NULL;
+
+-- TABLE ns.clapes
+
+INSERT INTO ns.clapes(codigo,descricao,tipoclapes,id_grupo,id,lastupdate)
+Select clap.codigo,clap.descricao,clap.tipoclapes,clap.id_grupo,clap.id,clap.lastupdate
+FROM nsmigration.clapes clap
+LEFT JOIN ns.clapes clap1 ON clap.id = clap1.id
+WHERE clap1.id IS NULL;
+
+-- PESSOAS
+
+UPDATE nsmigration.pessoas
+SET agencia = ag1.agencia 
+FROM financas.agencias ag1, financasmigration.agencias ag2
+WHERE pessoas.agencia = ag2.agencia
+AND ag2.banco = ag1.banco;
+
+INSERT INTO ns.pessoas(pessoa,datacadastro,proximocontato,nome,nomefantasia,tp_identificacao,cnpj,chavecnpj,cpf,caepf,inscricaoestadual,inscestsubstituto,inscricaomunicipal,rntrc,identidade,suframa,nit,nire,observacao,email,site,codigopis,codigocofins,codigocsll,codigoirrf,conta,contrapartida,contadesconto,contajuros,classefinpersona,contacorrente,ccustopersona,contamulta,contaestoque,bloqueado,contribuinteicms,contribuinteipi,produtorrural,substitutomunicipal,tiposimples,qualificacao,icmssimp,regimereceita,aliquotarat,aliquotafap,aliquotaterceiros,percentualtaxaservicoscooperativa,percentualinsscooperativa,orgaoemissor,tipoicms,codigocontabilcliente,anotacao,datacliente,datafornecedor,datavendedor,leadativado,clienteativado,fornecedorativado,vendedorativado,transportadoraativado,tecnicoativado,pagamentounificado,tipovencimento,diavencimento,notaantecipadacobranca,emailcobranca,enviarnfeporemail,pontofidelidade,retempis,retemcofins,retemcsll,retemirrf,retemiss,tipolead,descricao,totalfuncionarios,receitaanual,datacriacao,codigocontabilfornecedor,banco,agencianumero,agencianome,contanumero,podeparticiparagendamento,codigocontabiltransportadora,datatransportadora,cobrancaaposservico,prorataantecipada,celulavenda,classificacaolead,midiaorigem,parcelamento,promocaolead,representante,segmentoatuacao,statuslead,agencia,centrocusto,id_grupo,idclasspessoacliente,idclasspessoafornecedor,idclasspessoatransportadora,idclasspessoavendedor,classificado,id,captador,vendedor,usuariovendedor,criador,contatoativado,id_receitadiferenciada,id_despesadiferenciada,tpcontacompra,fichaativado,categoriatecnico_id,percentualfaturamentoservico,percentualfaturamentoencargo,percentualfaturamentoiss,percentualfaturamentoretencao,valormaxdesconto,id_rateiopadrao,tributoativado,enviarboletoporemail,concessionariapublica,codigoconcessionaria,id_conta_receber,id_rateiopadrao_receber,id_layoutcobranca,id_cliente_fatura,diafaturamento,diasvencimentofatura,id_formapagamento,templateordemservico,nacionalidade,chavegold,id_faixadecredito,limite_de_credito,importacao_hash,enderecocobrancautilizarenderecoprincipal,enderecoentregautilizarenderecoprincipal,retem_inss,representantecomercialativado,representantetecnicoativado,representante_tecnico,representante_conv_old,template_rps,percentualtaxacobrancaterceirizacao,dataultimacompra,valorultimacompra,projeto,contratounificadonacobranca,usarvencimentounificado,diavencimentounificado,indicadorinscricaoestadual,comissao,json_elementos_controle,enviarnfseporemail,documentoestrangeiro,id_formapagamento_fornecedor,tipocontrolepagamento,situacaopagamento,tipoclientepagamento,justificativasituacaopagamento,justificativatipoclientepagamento,inscritapaa,retem_abaixo_minimo,id_fornecedorfactoring,funcionarioativado,contribuinteindividualativado,tomadorfolhaativado,classificacaofinanceirafrete,classificacaofinanceiraseguro,classificacaofinanceiraoutdesp,notafutura,datasituacaopagamento,datatipoclientepagamento,lastupdate)
+Select pes.pessoa,pes.datacadastro,pes.proximocontato,pes.nome,pes.nomefantasia,pes.tp_identificacao,pes.cnpj,pes.chavecnpj,pes.cpf,pes.caepf,pes.inscricaoestadual,pes.inscestsubstituto,pes.inscricaomunicipal,pes.rntrc,pes.identidade,pes.suframa,pes.nit,pes.nire,pes.observacao,pes.email,pes.site,pes.codigopis,pes.codigocofins,pes.codigocsll,pes.codigoirrf,pes.conta,pes.contrapartida,pes.contadesconto,pes.contajuros,pes.classefinpersona,pes.contacorrente,pes.ccustopersona,pes.contamulta,pes.contaestoque,pes.bloqueado,pes.contribuinteicms,pes.contribuinteipi,pes.produtorrural,pes.substitutomunicipal,pes.tiposimples,pes.qualificacao,pes.icmssimp,pes.regimereceita,pes.aliquotarat,pes.aliquotafap,pes.aliquotaterceiros,pes.percentualtaxaservicoscooperativa,pes.percentualinsscooperativa,pes.orgaoemissor,pes.tipoicms,pes.codigocontabilcliente,pes.anotacao,pes.datacliente,pes.datafornecedor,pes.datavendedor,pes.leadativado,pes.clienteativado,pes.fornecedorativado,pes.vendedorativado,pes.transportadoraativado,pes.tecnicoativado,pes.pagamentounificado,pes.tipovencimento,pes.diavencimento,pes.notaantecipadacobranca,pes.emailcobranca,pes.enviarnfeporemail,pes.pontofidelidade,pes.retempis,pes.retemcofins,pes.retemcsll,pes.retemirrf,pes.retemiss,pes.tipolead,pes.descricao,pes.totalfuncionarios,pes.receitaanual,pes.datacriacao,pes.codigocontabilfornecedor,pes.banco,pes.agencianumero,pes.agencianome,pes.contanumero,pes.podeparticiparagendamento,pes.codigocontabiltransportadora,pes.datatransportadora,pes.cobrancaaposservico,pes.prorataantecipada,pes.celulavenda,pes.classificacaolead,pes.midiaorigem,pes.parcelamento,pes.promocaolead,pes.representante,pes.segmentoatuacao,pes.statuslead,pes.agencia,pes.centrocusto,pes.id_grupo,pes.idclasspessoacliente,pes.idclasspessoafornecedor,pes.idclasspessoatransportadora,pes.idclasspessoavendedor,pes.classificado,pes.id,pes.captador,pes.vendedor,pes.usuariovendedor,pes.criador,pes.contatoativado,pes.id_receitadiferenciada,pes.id_despesadiferenciada,pes.tpcontacompra,pes.fichaativado,pes.categoriatecnico_id,pes.percentualfaturamentoservico,pes.percentualfaturamentoencargo,pes.percentualfaturamentoiss,pes.percentualfaturamentoretencao,pes.valormaxdesconto,pes.id_rateiopadrao,pes.tributoativado,pes.enviarboletoporemail,pes.concessionariapublica,pes.codigoconcessionaria,pes.id_conta_receber,pes.id_rateiopadrao_receber,pes.id_layoutcobranca,pes.id_cliente_fatura,pes.diafaturamento,pes.diasvencimentofatura,pes.id_formapagamento,pes.templateordemservico,pes.nacionalidade,pes.chavegold,pes.id_faixadecredito,pes.limite_de_credito,pes.importacao_hash,pes.enderecocobrancautilizarenderecoprincipal,pes.enderecoentregautilizarenderecoprincipal,pes.retem_inss,pes.representantecomercialativado,pes.representantetecnicoativado,pes.representante_tecnico,pes.representante_conv_old,pes.template_rps,pes.percentualtaxacobrancaterceirizacao,pes.dataultimacompra,pes.valorultimacompra,pes.projeto,pes.contratounificadonacobranca,pes.usarvencimentounificado,pes.diavencimentounificado,pes.indicadorinscricaoestadual,pes.comissao,pes.json_elementos_controle,pes.enviarnfseporemail,pes.documentoestrangeiro,pes.id_formapagamento_fornecedor,pes.tipocontrolepagamento,pes.situacaopagamento,pes.tipoclientepagamento,pes.justificativasituacaopagamento,pes.justificativatipoclientepagamento,pes.inscritapaa,pes.retem_abaixo_minimo,pes.id_fornecedorfactoring,pes.funcionarioativado,pes.contribuinteindividualativado,pes.tomadorfolhaativado,pes.classificacaofinanceirafrete,pes.classificacaofinanceiraseguro,pes.classificacaofinanceiraoutdesp,pes.notafutura,pes.datasituacaopagamento,pes.datatipoclientepagamento,pes.lastupdate
+FROM nsmigration.pessoas pes
+LEFT JOIN ns.pessoas pes1 ON pes.id = pes1.id
+WHERE pes1.cnpj IS NULL AND pes1.id IS NULL;
+
+-- FIM DA IMPORTAÇÃO DE 'NS.PESSOAS'
+
+-- Importação de persona.lotacoes não existentes
+
+UPDATE personamigration.lotacoes
+SET estabelecimento = l1.estabelecimento
+FROM ns.estabelecimentos l1, nsmigration.estabelecimentos l2
+WHERE lotacoes.estabelecimento = l2.estabelecimento 
+AND l2.raizcnpj = l1.raizcnpj
+AND l2.ordemcnpj = l1.ordemcnpj;
+
+UPDATE personamigration.lotacoes
+SET empresa = l1.empresa
+FROM ns.empresas l1, nsmigration.empresas l2
+WHERE lotacoes.empresa = l2.empresa 
+AND l2.raizcnpj = l1.raizcnpj
+AND l2.ordemcnpj = l1.ordemcnpj;
+
+INSERT INTO persona.lotacoes (codigo, nome, tipo, enderecodiferente, tipologradouro, logradouro, numero, complemento, bairro, cidade, cep, uf, municipio, centrocustonasajon, classefinnasajon, ccustopersona, classefinpersona, outrasentidadesdiferente, fpas, codigoterceiros, aliquotaterceiros, agentenocivo, empresa, estabelecimento, tomador, lotacao, obra, processo, lastupdate, nuncaexpostoagentenocivo)
+SELECT 'I' || lot.codigo, lot.nome, lot.tipo, lot.enderecodiferente, lot.tipologradouro, lot.logradouro, lot.numero, lot.complemento, lot.bairro, lot.cidade, lot.cep, lot.uf, 
+lot.municipio, lot.centrocustonasajon, lot.classefinnasajon, lot.ccustopersona, lot.classefinpersona, lot.outrasentidadesdiferente, lot.fpas, 
+lot.codigoterceiros, lot.aliquotaterceiros, lot.agentenocivo, lot.empresa, lot.estabelecimento, lot.tomador, lot.lotacao, lot.obra, lot.processo, 
+lot.lastupdate, lot.nuncaexpostoagentenocivo
+FROM personamigration.lotacoes lot
+LEFT JOIN persona.lotacoes lot1 ON lot.codigo = lot1.codigo AND lot.empresa = lot1.empresa
+WHERE lot1.lotacao IS NULL;
+
+-- Vinculando grupos à empresas
+
+UPDATE ns.empresas
+SET grupoempresarial = A.grupoempresarial
+FROM ns.gruposempresariais A
+WHERE A.codigo = empresas.codigo;
+
+-- FIM DA IMPORTAÇÃO INICIAL
+
+
+-- Importação de TABLE financas.bancos não existentes
+
+INSERT INTO financas.bancos(codigo, nome, numero, tipoimpressao, banco, lastupdate, codigoispb)
+SELECT banco1.codigo, banco1.nome, banco1.numero, banco1.tipoimpressao, banco1.banco, banco1.lastupdate, banco1.codigoispb
+FROM financasmigration.bancos banco1
+LEFT JOIN financas.bancos banco2 ON banco1.numero = banco2.numero
+WHERE banco2.banco IS NULL;
+
+-- Importação de TABLE financas.agencias não existentes
+
+UPDATE financasmigration.agencias
+SET banco = banco1.banco 
+FROM financas.bancos banco1, financasmigration.bancos banco2
+WHERE agencias.banco = banco2.banco
+AND banco2.numero = banco1.numero;
+
+INSERT INTO financas.agencias(codigo, nome, agencianumero, digitoverificador, logradouro, numero, complemento, bairro, cidade, estado, cep, contato, telefone, dddtel, agencia, banco, lastupdate)
+SELECT ag1.codigo, ag1.nome, ag1.agencianumero, ag1.digitoverificador, ag1.logradouro, ag1.numero, ag1.complemento, ag1.bairro, ag1.cidade, ag1.estado, ag1.cep, ag1.contato, ag1.telefone, ag1.dddtel, ag1.agencia, ag1.banco, ag1.lastupdate
+FROM financasmigration.agencias ag1
+LEFT JOIN financas.agencias ag2 ON ag1.codigo = ag2.codigo AND ag1.banco = ag2.banco
+WHERE ag2.agencia IS NULL;
+
+-- Importação de persona.sindicatos não existentes
+
+INSERT INTO persona.sindicatos(codigo, nome, logradouro, numero, complemento, bairro, cidade, cep, codigocontribuicao, cnpj, codigoentidadesindical, pisosalarial, calculoeacumulativo, estado, calculanofim, patronal, contato, telefone, dddtel, fax, dddfax, email, somentemaioranuenio, multafgts, mesesmediamaternidade, diadissidio, diasaviso, qtdemrre, qtdemrfe, qtdemr13, mesassistencial, mediaferiaspelomaiorvalor, media13pelomaiorvalor, mediarescisaopelomaiorvalor, mesdesconto, mesdissidio, mesesmediaferias, mesesmediarescisao, mesesmedia13, numeradorfracao, denominadorfracao, fpas, codigoterceiros, sindicato, lastupdate)
+SELECT sind1.codigo, sind1.nome, sind1.logradouro, sind1.numero, sind1.complemento, sind1.bairro, sind1.cidade, sind1.cep, sind1.codigocontribuicao, sind1.cnpj, sind1.codigoentidadesindical, sind1.pisosalarial, sind1.calculoeacumulativo, sind1.estado, sind1.calculanofim, sind1.patronal, sind1.contato, sind1.telefone, sind1.dddtel, sind1.fax, sind1.dddfax, sind1.email, sind1.somentemaioranuenio, sind1.multafgts, sind1.mesesmediamaternidade, sind1.diadissidio, sind1.diasaviso, sind1.qtdemrre, sind1.qtdemrfe, sind1.qtdemr13, sind1.mesassistencial, sind1.mediaferiaspelomaiorvalor, sind1.media13pelomaiorvalor, sind1.mediarescisaopelomaiorvalor, sind1.mesdesconto, sind1.mesdissidio, sind1.mesesmediaferias, sind1.mesesmediarescisao, sind1.mesesmedia13, sind1.numeradorfracao, sind1.denominadorfracao, sind1.fpas, sind1.codigoterceiros, sind1.sindicato, sind1.lastupdate
+FROM personamigration.sindicatos sind1
+LEFT JOIN persona.sindicatos sind2 ON sind1.codigo = sind2.codigo and sind1.nome = sind2.nome
+WHERE sind2.sindicato IS NULL;
+
+-- Importação de persona.faixas não existentes
+
+INSERT INTO persona.faixas(codigo, descricao, faixa, lastupdate)
+SELECT faixa1.codigo, faixa1.descricao, faixa1.faixa, faixa1.lastupdate
+FROM personamigration.faixas faixa1
+LEFT JOIN persona.faixas faixa2 ON faixa1.codigo = faixa2.codigo
+WHERE faixa2.faixa IS NULL;
+
+
+-- Importação de persona.instituicoes não existentes
+
+INSERT INTO persona.instituicoes(tipo, codigo, nome, cnpj, registroans, instituicao, cnes, ddd, telefone, lastupdate)
+SELECT inst1.tipo, 'I' || inst1.codigo, inst1.nome, inst1.cnpj, inst1.registroans, inst1.instituicao, inst1.cnes, inst1.ddd, inst1.telefone, inst1.lastupdate
+FROM personamigration.instituicoes inst1
+LEFT JOIN persona.instituicoes inst2 ON inst1.cnpj = inst2.cnpj
+WHERE inst2.instituicao IS NULL; 
+
+-- Importação de persona.eventos não existentes
+
+UPDATE personamigration.eventos
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE eventos.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.eventos
+SET eventofaixa = eve1.evento
+FROM persona.eventos eve1, personamigration.eventos eve2
+WHERE eventos.eventofaixa = eve2.evento
+AND eve2.codigo = eve1.codigo
+AND eve2.empresa = eve1.empresa;
+
+UPDATE personamigration.eventos
+SET faixa = faixa1.faixa
+FROM persona.faixas faixa1, personamigration.faixas faixa2
+WHERE eventos.faixa = faixa2.faixa
+AND faixa2.codigo = faixa1.codigo;
+
+UPDATE personamigration.eventos
+SET instituicao = inst1.instituicao
+FROM persona.instituicoes inst1, personamigration.instituicoes inst2
+WHERE eventos.instituicao = inst2.instituicao
+AND inst2.cnpj = inst1.cnpj;
+
+WITH inserir AS (
+	INSERT INTO persona.eventos(codigo, nome, tipovalor, unidade, percentual, incideinss, incideirrf, incidefgts, categoria, totalizarais, totalizainforme, acumulahoraextra, valorminimo, valormaximo, basefaixa, incidepis, incideencargos, pagobancohoras, fazproporcaopiso, valorpiso, codigohomolognet, tipomedia, valorintegralbasevh, incidedsr, periodoanuenio, qtdemaximaanuenio, rubricaesocial, incidesindical, somamediaferias, somamedia13, somamediarescisao, somamaiorremuneracao, tipocalculo, acumulavalordia, valorintegralbasevalordia, incidesalariofamilia, fazproporcaocalculo, comparacomtarifas, valorintegralbasesindical, valorintegralbasesalariofamilia, incidepensaoalimenticia, somamediamaternidade, empresa, evento, eventofaixa, faixa, instituicao, tipoformula, formulabasicacondicao, formulabasicavalor, formulabasicareferencia, formulaavancada, lastupdate, somentecompoemaiorremuneracao)
+	SELECT eve1.codigo, eve1.nome, eve1.tipovalor, eve1.unidade, eve1.percentual, eve1.incideinss, eve1.incideirrf, eve1.incidefgts, eve1.categoria, eve1.totalizarais, eve1.totalizainforme, eve1.acumulahoraextra, eve1.valorminimo, eve1.valormaximo, eve1.basefaixa, eve1.incidepis, eve1.incideencargos, eve1.pagobancohoras, eve1.fazproporcaopiso, eve1.valorpiso, eve1.codigohomolognet, eve1.tipomedia, eve1.valorintegralbasevh, eve1.incidedsr, eve1.periodoanuenio, eve1.qtdemaximaanuenio, eve1.rubricaesocial, eve1.incidesindical, eve1.somamediaferias, eve1.somamedia13, eve1.somamediarescisao, eve1.somamaiorremuneracao, eve1.tipocalculo, eve1.acumulavalordia, eve1.valorintegralbasevalordia, eve1.incidesalariofamilia, eve1.fazproporcaocalculo, eve1.comparacomtarifas, eve1.valorintegralbasesindical, eve1.valorintegralbasesalariofamilia, eve1.incidepensaoalimenticia, eve1.somamediamaternidade, eve1.empresa, eve1.evento, eve1.eventofaixa, eve1.faixa, eve1.instituicao, eve1.tipoformula, eve1.formulabasicacondicao, eve1.formulabasicavalor, eve1.formulabasicareferencia, eve1.formulaavancada, eve1.lastupdate, eve1.somentecompoemaiorremuneracao
+	FROM personamigration.eventos eve1
+	LEFT JOIN persona.eventos eve2 ON eve1.codigo = eve2.codigo AND eve1.empresa = eve2.empresa
+	WHERE eve2.evento IS NULL
+	RETURNING *
+), conjunto AS (
+	SELECT
+		a.conjunto, c.evento 
+	FROM 	ns.estabelecimentosconjuntos a
+	INNER JOIN ns.estabelecimentos b ON a.estabelecimento = b.estabelecimento
+	INNER JOIN inserir c ON b.empresa = c.empresa
+	WHERE a.cadastro = 13
+)
+INSERT INTO ns.conjuntosrubricas(conjunto,registro)
+SELECT conjunto, evento
+FROM conjunto;
+
+-- Importação de persona.rubricasponto não existentes
+
+UPDATE personamigration.rubricasponto
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE rubricasponto.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.rubricasponto
+SET evento = eve1.evento
+FROM persona.eventos eve1, personamigration.eventos eve2
+WHERE rubricasponto.evento = eve2.evento
+AND eve2.codigo = eve1.codigo
+AND eve2.empresa = eve1.empresa;
+
+INSERT INTO persona.rubricasponto(rubricaponto, codigo, nome, evento, tipoformula, formulabasicacondicao, formulabasicavalor, formulaavancada, empresa, tipo, lastupdate)
+SELECT rubr1.rubricaponto, rubr1.codigo, rubr1.nome, rubr1.evento, rubr1.tipoformula, rubr1.formulabasicacondicao, rubr1.formulabasicavalor, rubr1.formulaavancada, rubr1.empresa, rubr1.tipo, rubr1.lastupdate
+FROM personamigration.rubricasponto rubr1
+LEFT JOIN persona.rubricasponto rubr2 ON rubr1.codigo = rubr2.codigo AND rubr1.empresa = rubr2.empresa
+WHERE rubr2.rubricaponto IS NULL;
+
+-- TABLE persona.acordosdeprorrogacoes
+
+UPDATE personamigration.acordosdeprorrogacoes
+SET sindicato = sind1.sindicato
+FROM persona.sindicatos sind1, personamigration.sindicatos sind2
+WHERE acordosdeprorrogacoes.sindicato = sind2.sindicato
+AND sind2.cnpj = sind1.cnpj;
+
+UPDATE personamigration.acordosdeprorrogacoes
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE acordosdeprorrogacoes.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.afastamentostrabalhadores
+
+UPDATE personamigration.afastamentostrabalhadores
+SET sindicato = sind1.sindicato
+FROM persona.sindicatos sind1, personamigration.sindicatos sind2
+WHERE afastamentostrabalhadores.sindicato = sind2.sindicato
+AND sind2.cnpj = sind1.cnpj;
+
+-- TABLE personamigration.ambientes
+
+UPDATE personamigration.ambientes
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE ambientes.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.ambientes
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE ambientes.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.atividades
+
+UPDATE personamigration.atividades
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE atividades.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.beneficios
+
+UPDATE personamigration.beneficios
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE beneficios.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.camposespeciais
+
+UPDATE personamigration.camposespeciais
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE camposespeciais.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.cargos
+
+UPDATE personamigration.cargos
+SET sindicato = sind1.sindicato
+FROM persona.sindicatos sind1, personamigration.sindicatos sind2
+WHERE cargos.sindicato = sind2.sindicato
+AND sind2.cnpj = sind1.cnpj;
+
+UPDATE personamigration.cargos
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE cargos.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.cargos
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE cargos.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.codigosexternosempresas;
+
+UPDATE personamigration.codigosexternosempresas
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE codigosexternosempresas.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.codigosexternosevento;
+
+UPDATE personamigration.codigosexternosevento
+SET empresaassociada = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE codigosexternosevento.empresaassociada = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.codigosexternosevento
+SET evento = eve1.evento
+FROM persona.eventos eve1, personamigration.eventos eve2
+WHERE codigosexternosevento.evento = eve2.evento
+AND eve2.codigo = eve1.codigo
+AND eve2.empresa = eve1.empresa;
+
+UPDATE personamigration.codigosexternosevento
+SET eventoassociado = eve1.evento
+FROM persona.eventos eve1, personamigration.eventos eve2
+WHERE codigosexternosevento.eventoassociado = eve2.evento
+AND eve2.codigo = eve1.codigo
+AND eve2.empresa = eve1.empresa;
+
+-- TABLE personamigration.comercializacaoproducao;
+
+UPDATE personamigration.comercializacaoproducao
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE comercializacaoproducao.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.consolidacao;
+
+UPDATE personamigration.consolidacao
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE consolidacao.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.contascorrentespagadoras;
+
+UPDATE personamigration.contascorrentespagadoras
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE contascorrentespagadoras.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.contascorrentespagadoras
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE contascorrentespagadoras.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.contascorrentespagadoras
+SET banco = banco1.banco 
+FROM financas.bancos banco1, financasmigration.bancos banco2
+WHERE contascorrentespagadoras.banco = banco2.banco
+AND banco2.numero = banco1.numero;
+
+UPDATE personamigration.contascorrentespagadoras
+SET agencia = ag1.agencia 
+FROM financas.agencias ag1, financasmigration.agencias ag2
+WHERE contascorrentespagadoras.agencia = ag2.agencia
+AND ag2.banco = ag1.banco
+AND ag2.codigo = ag1.codigo
+AND ag2.digitoverificador = ag1.digitoverificador;
+
+-- TABLE personamigration.contascorrentespagadoras;
+
+UPDATE personamigration.contribuicoessindicaispatronais
+SET sindicato = sind1.sindicato
+FROM persona.sindicatos sind1, personamigration.sindicatos sind2
+WHERE contribuicoessindicaispatronais.sindicato = sind2.sindicato
+AND sind2.cnpj = sind1.cnpj;
+
+UPDATE personamigration.contribuicoessindicaispatronais
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE contribuicoessindicaispatronais.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.departamentos;
+
+UPDATE personamigration.departamentos
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE departamentos.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.dependentestrabalhadores;
+
+UPDATE personamigration.dependentestrabalhadores
+SET agencia = ag1.agencia 
+FROM financas.agencias ag1, financasmigration.agencias ag2
+WHERE dependentestrabalhadores.agencia = ag2.agencia
+AND ag2.banco = ag1.banco
+AND ag2.codigo = ag1.codigo
+AND ag2.digitoverificador = ag1.digitoverificador;
+
+UPDATE personamigration.dependentestrabalhadores
+SET eventopensao13 = eve1.evento
+FROM persona.eventos eve1, personamigration.eventos eve2
+WHERE dependentestrabalhadores.eventopensao13 = eve2.evento
+AND eve2.codigo = eve1.codigo
+AND eve2.empresa = eve1.empresa;
+
+UPDATE personamigration.dependentestrabalhadores
+SET eventopensaoferias = eve1.evento
+FROM persona.eventos eve1, personamigration.eventos eve2
+WHERE dependentestrabalhadores.eventopensaoferias = eve2.evento
+AND eve2.codigo = eve1.codigo
+AND eve2.empresa = eve1.empresa;
+
+UPDATE personamigration.dependentestrabalhadores
+SET eventopensaofolha = eve1.evento
+FROM persona.eventos eve1, personamigration.eventos eve2
+WHERE dependentestrabalhadores.eventopensaofolha = eve2.evento
+AND eve2.codigo = eve1.codigo
+AND eve2.empresa = eve1.empresa;
+
+UPDATE personamigration.dependentestrabalhadores
+SET eventopensaopplr = eve1.evento
+FROM persona.eventos eve1, personamigration.eventos eve2
+WHERE dependentestrabalhadores.eventopensaopplr = eve2.evento
+AND eve2.codigo = eve1.codigo
+AND eve2.empresa = eve1.empresa;
+
+-- TABLE personamigration.detalhamentoscalculostrabalhadores;
+
+UPDATE personamigration.detalhamentoscalculostrabalhadores
+SET evento = eve1.evento
+FROM persona.eventos eve1, personamigration.eventos eve2
+WHERE detalhamentoscalculostrabalhadores.evento = eve2.evento
+AND eve2.codigo = eve1.codigo
+AND eve2.empresa = eve1.empresa;
+
+-- TABLE personamigration.documentosregrascolaboradores;
+
+UPDATE personamigration.documentosregrascolaboradores
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE documentosregrascolaboradores.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.funcoes;
+
+UPDATE personamigration.funcoes
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE funcoes.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.grcsfuncionarios;
+
+UPDATE personamigration.grcsfuncionarios
+SET sindicato = sind1.sindicato
+FROM persona.sindicatos sind1, personamigration.sindicatos sind2
+WHERE grcsfuncionarios.sindicato = sind2.sindicato
+AND sind2.cnpj = sind1.cnpj;
+
+UPDATE personamigration.grcsfuncionarios
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE grcsfuncionarios.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.grcspatronais;
+
+UPDATE personamigration.grcspatronais
+SET sindicato = sind1.sindicato
+FROM persona.sindicatos sind1, personamigration.sindicatos sind2
+WHERE grcspatronais.sindicato = sind2.sindicato
+AND sind2.cnpj = sind1.cnpj;
+
+UPDATE personamigration.grcspatronais
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE grcspatronais.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.guiasprevidenciasocialempresas;
+
+UPDATE personamigration.guiasprevidenciasocialempresas
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE guiasprevidenciasocialempresas.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.guiasprevidenciasocialempresas
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE guiasprevidenciasocialempresas.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.guiassefip;
+
+UPDATE personamigration.guiassefip
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE guiassefip.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.historicosgps;
+
+UPDATE personamigration.historicosgps
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE historicosgps.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.guiassefip;
+
+UPDATE personamigration.historicosgpsestabelecimentos
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE historicosgpsestabelecimentos.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.historicosgps;
+
+UPDATE personamigration.horarios
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE horarios.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.itensfaixas;
+
+UPDATE personamigration.itensfaixas
+SET faixa = faixa1.faixa
+FROM persona.faixas faixa1, personamigration.faixas faixa2
+WHERE itensfaixas.faixa = faixa2.faixa
+AND faixa2.codigo = faixa1.codigo;
+
+-- TABLE personamigration.jornadas;
+
+UPDATE personamigration.jornadas
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE jornadas.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.layoutsimportacoes;
+
+UPDATE personamigration.layoutsimportacoes
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE layoutsimportacoes.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.layoutsimportacoes;
+
+UPDATE personamigration.layoutsrelatoriosempresa
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE layoutsrelatoriosempresa.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.locados;
+
+UPDATE personamigration.locados
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE locados.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.locados
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE locados.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.lotacoes;
+
+UPDATE personamigration.lotacoes
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE lotacoes.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.lotacoes
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE lotacoes.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.movimentos;
+
+UPDATE personamigration.movimentos
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE movimentos.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.movimentos
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE movimentos.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.movimentos
+SET sindicato = sind1.sindicato
+FROM persona.sindicatos sind1, personamigration.sindicatos sind2
+WHERE movimentos.sindicato = sind2.sindicato
+AND sind2.cnpj = sind1.cnpj;
+
+UPDATE personamigration.movimentos
+SET evento = eve1.evento
+FROM persona.eventos eve1, personamigration.eventos eve2
+WHERE movimentos.evento = eve2.evento
+AND eve2.codigo = eve1.codigo
+AND eve2.empresa = eve1.empresa;
+
+-- TABLE personamigration.movimentosponto;
+
+UPDATE personamigration.movimentosponto
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE movimentosponto.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.movimentosponto
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE movimentosponto.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.movimentosponto
+SET sindicato = sind1.sindicato
+FROM persona.sindicatos sind1, personamigration.sindicatos sind2
+WHERE movimentosponto.sindicato = sind2.sindicato
+AND sind2.cnpj = sind1.cnpj;
+
+UPDATE personamigration.movimentosponto
+SET rubricaponto = rubr1.rubricaponto
+FROM persona.rubricasponto rubr1, personamigration.rubricasponto rubr2
+WHERE movimentosponto.rubricaponto = rubr2.rubricaponto
+AND rubr2.codigo = rubr1.codigo
+AND rubr2.empresa = rubr1.empresa;
+
+-- TABLE personamigration.mudancastrabalhadores;
+
+UPDATE personamigration.mudancastrabalhadores
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE mudancastrabalhadores.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.patestabelecimentos;
+
+UPDATE personamigration.patestabelecimentos
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE patestabelecimentos.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.pedidosvalestransportes;
+
+UPDATE personamigration.pedidosvalestransportes
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE pedidosvalestransportes.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.planossaude;
+
+UPDATE personamigration.planossaude
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE planossaude.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.planossaude
+SET instituicao = inst1.instituicao
+FROM persona.instituicoes inst1, personamigration.instituicoes inst2
+WHERE planossaude.instituicao = inst2.instituicao
+AND inst2.cnpj = inst1.cnpj;
+
+-- TABLE personamigration.planossauderubricas;
+
+UPDATE personamigration.planossauderubricas
+SET rubrica = eve1.evento
+FROM persona.eventos eve1, personamigration.eventos eve2
+WHERE planossauderubricas.rubrica = eve2.evento
+AND eve2.codigo = eve1.codigo
+AND eve2.empresa = eve1.empresa;
+
+-- TABLE personamigration.processos;
+
+UPDATE personamigration.processos
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE processos.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.processosrubricas;
+
+UPDATE personamigration.processosrubricas
+SET rubrica = eve1.evento
+FROM persona.eventos eve1, personamigration.eventos eve2
+WHERE processosrubricas.rubrica = eve2.evento
+AND eve2.codigo = eve1.codigo
+AND eve2.empresa = eve1.empresa;
+
+-- TABLE personamigration.provisoes13;
+
+UPDATE personamigration.provisoes13
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE provisoes13.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.provisoes13trabalhadores;
+
+UPDATE personamigration.provisoes13trabalhadores
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE provisoes13trabalhadores.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.provisoesferias;
+
+UPDATE personamigration.provisoesferias
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE provisoesferias.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.provisoesferiastrabalhadores;
+
+UPDATE personamigration.provisoesferiastrabalhadores
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE provisoesferiastrabalhadores.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.provisoesrescisoes;
+
+UPDATE personamigration.provisoesrescisoes
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE provisoesrescisoes.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.provisoesrescisoes
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE provisoesrescisoes.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.reajustessindicatos;
+
+UPDATE personamigration.reajustessindicatos
+SET sindicato = sind1.sindicato
+FROM persona.sindicatos sind1, personamigration.sindicatos sind2
+WHERE reajustessindicatos.sindicato = sind2.sindicato
+AND sind2.cnpj = sind1.cnpj;
+
+-- TABLE personamigration.relatoriosgravadosempresas;
+
+UPDATE personamigration.relatoriosgravadosempresas
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE relatoriosgravadosempresas.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.rubricasconfiguracoescontabilidade;
+
+UPDATE personamigration.rubricasconfiguracoescontabilidade
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE rubricasconfiguracoescontabilidade.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.rubricasconfiguracoescontabilidade
+SET rubrica = eve1.evento
+FROM persona.eventos eve1, personamigration.eventos eve2
+WHERE rubricasconfiguracoescontabilidade.rubrica = eve2.evento
+AND eve2.codigo = eve1.codigo
+AND eve2.empresa = eve1.empresa;
+
+-- TABLE personamigration.salariosliquidos;
+
+UPDATE personamigration.salariosliquidos
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE salariosliquidos.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+-- TABLE personamigration.tiposfuncionarios;
+
+UPDATE personamigration.tiposfuncionarios
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE tiposfuncionarios.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+INSERT INTO persona.tiposfuncionarios(codigo, descricao, empresa, tipofuncionario, lastupdate)
+SELECT tpfun1.codigo, tpfun1.descricao, tpfun1.empresa, tpfun1.tipofuncionario, tpfun1.lastupdate
+FROM personamigration.tiposfuncionarios tpfun1
+LEFT JOIN persona.tiposfuncionarios tpfun2 ON tpfun1.codigo = tpfun2.codigo AND tpfun1.empresa = tpfun2.empresa
+WHERE tpfun2.tipofuncionario IS NULL;
+
+-- IMPORTAÇÃO DA DO CADASTRO DE TRABALHADORES (persona.trabalhadores)
+
+UPDATE personamigration.trabalhadores
+SET empresa = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE trabalhadores.empresa = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.trabalhadores
+SET empresaanterior = emp1.empresa
+FROM ns.empresas emp1, nsmigration.empresas emp2
+WHERE trabalhadores.empresaanterior = emp2.empresa
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.trabalhadores
+SET estabelecimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE trabalhadores.estabelecimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.trabalhadores
+SET sindicato = sind1.sindicato
+FROM persona.sindicatos sind1, personamigration.sindicatos sind2
+WHERE trabalhadores.sindicato = sind2.sindicato
+AND sind2.cnpj = sind1.cnpj;
+
+UPDATE personamigration.trabalhadores
+SET instituicaoensino = inst1.instituicao
+FROM persona.instituicoes inst1, personamigration.instituicoes inst2
+WHERE trabalhadores.instituicaoensino = inst2.instituicao
+AND inst2.cnpj = inst1.cnpj;
+
+UPDATE personamigration.trabalhadores
+SET instituicaointegradora = inst1.instituicao
+FROM persona.instituicoes inst1, personamigration.instituicoes inst2
+WHERE trabalhadores.instituicaointegradora = inst2.instituicao
+AND inst2.cnpj = inst1.cnpj;
+
+UPDATE personamigration.trabalhadores
+SET tipofuncionario = tpfunc1.tipofuncionario
+FROM persona.tiposfuncionarios tpfunc1, personamigration.tiposfuncionarios tpfunc2
+WHERE trabalhadores.tipofuncionario = tpfunc2.tipofuncionario
+AND tpfunc2.codigo = tpfunc1.codigo
+AND tpfunc2.empresa = tpfunc1.empresa;
+
+UPDATE personamigration.trabalhadores
+SET agencia = ag1.agencia 
+FROM financas.agencias ag1, financasmigration.agencias ag2
+WHERE trabalhadores.agencia = ag2.agencia
+AND ag2.banco = ag1.banco
+AND ag2.codigo = ag1.codigo;
+
+UPDATE personamigration.trabalhadores
+SET nivelcargo = jnd2.nivelcargo
+FROM personamigration.niveiscargos jnd1, persona.niveiscargos jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.cargo = jnd2.cargo
+AND jnd1.nivelcargo = trabalhadores.nivelcargo;
+
+UPDATE personamigration.trabalhadores
+SET horario = jnd2.horario
+FROM personamigration.horarios jnd1, persona.horarios jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.horario = trabalhadores.horario;
+
+UPDATE personamigration.trabalhadores
+SET departamento = dep2.departamento
+FROM personamigration.departamentos dep1, persona.departamentos dep2
+WHERE dep1.codigo = dep2.codigo
+AND dep1.estabelecimento = dep2.estabelecimento
+AND dep1.departamento = trabalhadores.departamento;
+
+UPDATE personamigration.trabalhadores
+SET lotacao = jnd2.lotacao
+FROM personamigration.lotacoes jnd1, persona.lotacoes jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.lotacao = trabalhadores.lotacao;
+
+-- IMPORTAÇÃO DE CÁLCULO DOS TRABALHADORES! (persona.calculostrabalhadores)
+
+UPDATE personamigration.calculostrabalhadores
+SET sindicato = sind1.sindicato
+FROM persona.sindicatos sind1, personamigration.sindicatos sind2
+WHERE calculostrabalhadores.sindicato = sind2.sindicato
+AND sind2.cnpj = sind1.cnpj;
+
+UPDATE personamigration.calculostrabalhadores
+SET sindicatomovimento = sind1.sindicato
+FROM persona.sindicatos sind1, personamigration.sindicatos sind2
+WHERE calculostrabalhadores.sindicatomovimento = sind2.sindicato
+AND sind2.cnpj = sind1.cnpj;
+
+UPDATE personamigration.calculostrabalhadores
+SET estabelecimentomovimento = emp1.estabelecimento
+FROM ns.estabelecimentos emp1, nsmigration.estabelecimentos emp2
+WHERE calculostrabalhadores.estabelecimentomovimento = emp2.estabelecimento
+AND emp2.raizcnpj = emp1.raizcnpj
+AND emp2.ordemcnpj = emp1.ordemcnpj;
+
+UPDATE personamigration.calculostrabalhadores
+SET departamentomovimento = dpm1.departamento
+FROM persona.departamentos dpm1, personamigration.departamentos dpm2
+WHERE calculostrabalhadores.departamentomovimento = dpm2.departamento
+AND dpm2.codigo = dpm2.codigo
+AND dpm2.nome = dpm2.nome;
+
+UPDATE personamigration.calculostrabalhadores
+SET dependentetrabalhador = dpt1.dependentetrabalhador
+FROM persona.dependentestrabalhadores dpt1, personamigration.dependentestrabalhadores dpt2
+WHERE calculostrabalhadores.dependentetrabalhador = dpt2.dependentetrabalhador
+AND dpt1.codigo = dpt2.codigo
+AND dpt1.nome = dpt2.nome;
+
+UPDATE personamigration.calculostrabalhadores
+SET evento = eve1.evento
+FROM persona.eventos eve1, personamigration.eventos eve2
+WHERE calculostrabalhadores.evento = eve2.evento
+AND eve2.codigo = eve1.codigo
+AND eve2.empresa = eve1.empresa;
+
+UPDATE personamigration.calculostrabalhadores
+SET lotacao = lo1.lotacao
+FROM persona.lotacoes lo1, personamigration.lotacoes lo2
+WHERE calculostrabalhadores.lotacao = lo2.lotacao
+AND lo2.codigo = lo1.codigo
+AND lo2.empresa = lo1.empresa;
+
+UPDATE personamigration.calculostrabalhadores
+SET trabalhador = trab1.trabalhador
+FROM persona.trabalhadores trab1, personamigration.trabalhadores trab2
+WHERE calculostrabalhadores.trabalhador = trab2.trabalhador
+AND trab2.codigo = trab1.codigo
+AND trab2.nome = trab1.nome
+AND trab2.cpf = trab1.cpf;
+
+
+

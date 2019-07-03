@@ -1,0 +1,623 @@
+-- TABLE ns.obras
+
+UPDATE nsmigration.obras
+SET id_estabelecimento = obr1.estabelecimento
+FROM ns.estabelecimentos obr1, nsmigration.estabelecimentos obr2
+WHERE obras.id_estabelecimento = obr2.estabelecimento
+AND obr2.raizcnpj = obr1.raizcnpj
+AND obr2.ordemcnpj = obr1.ordemcnpj;
+
+INSERT INTO ns.obras(obra,codigonfse,descricao,inicio,cei,fim,habite_se,inativa,tipologradouro,endereco,numero,complemento,bairro,municipio,cidade,estado,cep,art,tpobra,unidades,upcs,area,aliquotarat,aliquotafap,cnae,aliquotaterceiros,cpf,raizcnpj,ordemcnpj,tipoidentificacao,contribuicaopatronalsubstituida,cno,id_estabelecimento,id_orgao,id_pessoa,id_agente,id,sistemadecontroledeponto,indicatiocontratacaoaprendiz,processoaprendiz,aprendizcontratadoporintermedio,instituicaoeducativa,processofap,processorat,empreitada,tipoinscricaocontratante,inscricaocontratante,tipoinscricaoproprietario,inscricaoproprietario,lastupdate)
+Select ob.obra,ob.codigonfse,ob.descricao,ob.inicio,ob.cei,
+ob.fim,ob.habite_se,ob.inativa,ob.tipologradouro,ob.endereco,ob.numero,
+ob.complemento,ob.bairro,ob.municipio,ob.cidade,ob.estado,ob.cep,ob.art,ob.tpobra,ob.unidades,
+ob.upcs,ob.area,ob.aliquotarat,ob.aliquotafap,ob.cnae,ob.aliquotaterceiros,ob.cpf,ob.raizcnpj,ob.ordemcnpj,
+ob.tipoidentificacao,ob.contribuicaopatronalsubstituida,ob.cno,ob.id_estabelecimento,ob.id_orgao,ob.id_pessoa,
+ob.id_agente,ob.id,ob.sistemadecontroledeponto,ob.indicatiocontratacaoaprendiz,ob.processoaprendiz,ob.aprendizcontratadoporintermedio,
+ob.instituicaoeducativa,ob.processofap,ob.processorat,ob.empreitada,ob.tipoinscricaocontratante,ob.inscricaocontratante,ob.tipoinscricaoproprietario,
+ob.inscricaoproprietario,ob.lastupdate
+FROM nsmigration.obras ob
+LEFT JOIN ns.obras ob1 ON ob.id = ob1.id
+WHERE ob1.id IS NULL;
+
+--financas.bancos
+
+--financas.agencias
+
+--persona.sindicatos
+
+--persona.faixas
+
+--persona.instituicoes
+
+--persona.eventos
+
+--persona.rubricasponto
+
+--persona.processos
+
+INSERT INTO persona.processos (codigo, tipo, descricao, tipodecisao, extensaodecisao, datadecisao, depositointegral, tipoautor, ibge, codigovara, motivo, empresa, processo, dataabertura, lastupdate)
+SELECT codigo, tipo, descricao, tipodecisao, extensaodecisao, datadecisao, depositointegral, tipoautor, ibge, codigovara, motivo, empresa, processo, dataabertura, lastupdate
+FROM personamigration.processos;
+
+--persona.acordosdeprorrogacoes
+
+INSERT INTO persona.acordosdeprorrogacoes (codigo, descricao, datainicio, datafim, quantidadehoras, percentual, empresa, acordodeprorrogacao, sindicato, lastupdate)
+SELECT codigo, descricao, datainicio, datafim, quantidadehoras, percentual, empresa, acordodeprorrogacao, sindicato, lastupdate
+FROM personamigration.acordosdeprorrogacoes;
+
+--persona.acordosdeprorrogacoesfaixas
+
+INSERT INTO persona.acordosdeprorrogacoesfaixas (diadasemana, quantidadehoras, percentual, acordodeprorrogacao, acordodeprorrogacaofaixa, lastupdate)
+SELECT diadasemana, quantidadehoras, percentual, acordodeprorrogacao, acordodeprorrogacaofaixa, lastupdate
+FROM personamigration.acordosdeprorrogacoesfaixas;
+
+--persona.funcoes
+
+INSERT INTO persona.funcoes (codigo, descricao, empresa, funcao, cbo, lastupdate)
+SELECT codigo, descricao, empresa, funcao, cbo, lastupdate
+FROM personamigration.funcoes;
+
+--persona.jornadas
+
+INSERT INTO persona.jornadas (codigo, descricao, entrada, saida, tipointervalo, duracaointervalo, tipojornada, descricaotipojornada, empresa, jornada, flexivel, lastupdate)
+SELECT jnd1.codigo, jnd1.descricao, jnd1.entrada, jnd1.saida, jnd1.tipointervalo, jnd1.duracaointervalo, jnd1.tipojornada, jnd1.descricaotipojornada, jnd1.empresa, jnd1.jornada, jnd1.flexivel, jnd1.lastupdate
+FROM personamigration.jornadas jnd1
+LEFT JOIN persona.jornadas jnd2 ON jnd1.codigo = jnd2.codigo AND jnd1.empresa = jnd2.empresa
+WHERE jnd2.jornada IS NULL;
+
+--persona.intervalosjornadas
+
+UPDATE personamigration.intervalosjornadas
+SET jornada = jnd2.jornada
+FROM personamigration.jornadas jnd1, persona.jornadas jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.jornada = intervalosjornadas.jornada;
+
+INSERT INTO persona.intervalosjornadas (inicio, fim, intervalojornada, jornada, lastupdate)
+SELECT jnd1.inicio, jnd1.fim, jnd1.intervalojornada, jnd1.jornada, jnd1.lastupdate
+FROM personamigration.intervalosjornadas jnd1
+LEFT JOIN persona.intervalosjornadas jnd2 ON jnd1.intervalojornada = jnd2.intervalojornada and jnd1.jornada = jnd2.jornada
+WHERE jnd2.intervalojornada IS NULL;
+
+
+--persona.horarios
+
+UPDATE personamigration.horarios
+SET jornadaquinta = jnd2.jornada
+FROM personamigration.jornadas jnd1, persona.jornadas jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.jornada = horarios.jornadaquinta;
+
+UPDATE personamigration.horarios
+SET jornadadomingo = jnd2.jornada
+FROM personamigration.jornadas jnd1, persona.jornadas jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.jornada = horarios.jornadadomingo;
+
+UPDATE personamigration.horarios
+SET jornadasabado = jnd2.jornada
+FROM personamigration.jornadas jnd1, persona.jornadas jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.jornada = horarios.jornadasabado;
+
+UPDATE personamigration.horarios
+SET jornadasegunda = jnd2.jornada
+FROM personamigration.jornadas jnd1, persona.jornadas jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.jornada = horarios.jornadasegunda;
+
+UPDATE personamigration.horarios
+SET jornadaoutros = jnd2.jornada
+FROM personamigration.jornadas jnd1, persona.jornadas jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.jornada = horarios.jornadaoutros;
+
+UPDATE personamigration.horarios
+SET jornadaquarta = jnd2.jornada
+FROM personamigration.jornadas jnd1, persona.jornadas jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.jornada = horarios.jornadaquarta;
+
+UPDATE personamigration.horarios
+SET jornadasexta = jnd2.jornada
+FROM personamigration.jornadas jnd1, persona.jornadas jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.jornada = horarios.jornadasexta;
+
+UPDATE personamigration.horarios
+SET jornadaterca = jnd2.jornada
+FROM personamigration.jornadas jnd1, persona.jornadas jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.jornada = horarios.jornadaterca;
+
+INSERT INTO persona.horarios (codigo, nome, numerofolgasfixas, diafolgaextra, diasemanafolgaextra, tipo, diasemanatolerancia, atrasosegunda, atrasoterca, atrasoquarta, atrasoquinta, atrasosexta, atrasosabado, atrasodomingo, repousosegunda, repousoterca, repousoquarta, repousoquinta, repousosexta, repousosabado, repousodomingo, empresa, horario, jornadaquinta, jornadadomingo, jornadasabado, jornadasegunda, jornadaoutros, jornadaquarta, jornadasexta, jornadaterca, lastupdate, desconsiderardsrsegunda, desconsiderardsrterca, desconsiderardsrquarta, desconsiderardsrquinta, desconsiderardsrsexta, desconsiderardsrsabado, desconsiderardsrdomingo, dsrsobredomingoseferiados)
+SELECT hr1.codigo, hr1.nome, hr1.numerofolgasfixas, hr1.diafolgaextra, hr1.diasemanafolgaextra, hr1.tipo, hr1.diasemanatolerancia, hr1.atrasosegunda, hr1.atrasoterca, hr1.atrasoquarta, hr1.atrasoquinta, hr1.atrasosexta, hr1.atrasosabado, hr1.atrasodomingo, hr1.repousosegunda, hr1.repousoterca, hr1.repousoquarta, hr1.repousoquinta, hr1.repousosexta, hr1.repousosabado, hr1.repousodomingo, hr1.empresa, hr1.horario, hr1.jornadaquinta, hr1.jornadadomingo, hr1.jornadasabado, hr1.jornadasegunda, hr1.jornadaoutros, hr1.jornadaquarta, hr1.jornadasexta, hr1.jornadaterca, hr1.lastupdate, hr1.desconsiderardsrsegunda, hr1.desconsiderardsrterca, hr1.desconsiderardsrquarta, hr1.desconsiderardsrquinta, hr1.desconsiderardsrsexta, hr1.desconsiderardsrsabado, hr1.desconsiderardsrdomingo, hr1.dsrsobredomingoseferiados
+FROM personamigration.horarios hr1
+LEFT JOIN persona.horarios hr2 ON hr1.codigo = hr2.codigo AND hr1.empresa = hr2.empresa
+WHERE hr2.horario IS NULL;
+
+--persona.cargos
+
+UPDATE personamigration.cargos
+SET lotacao = jnd2.lotacao
+FROM personamigration.lotacoes jnd1, persona.lotacoes jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.lotacao = cargos.lotacao;
+
+INSERT INTO persona.cargos (codigo, nome, descricao, cbo, experiencia, grauinstrucao, maiorsalmercado, menorsalmercado, requisitos, diasexperienciacontrato, diasprorrogacaocontrato, empresa, estabelecimento, cargo, departamento, horario, lotacao, sindicato, lastupdate, pontuacao, pisominimo)
+SELECT crg1.codigo, crg1.nome, crg1.descricao, crg1.cbo, crg1.experiencia, crg1.grauinstrucao, crg1.maiorsalmercado, crg1.menorsalmercado, crg1.requisitos, crg1.diasexperienciacontrato, crg1.diasprorrogacaocontrato, crg1.empresa, crg1.estabelecimento, crg1.cargo, crg1.departamento, crg1.horario, crg1.lotacao, crg1.sindicato, crg1.lastupdate, crg1.pontuacao, crg1.pisominimo
+FROM personamigration.cargos crg1
+LEFT JOIN persona.cargos crg2 ON crg1.codigo = crg2.codigo AND crg1.empresa = crg2.empresa
+WHERE crg2.cargo IS NULL;
+
+--persona.niveiscargos
+
+UPDATE personamigration.niveiscargos
+SET cargo = jnd2.cargo
+FROM personamigration.cargos jnd1, persona.cargos jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.cargo = niveiscargos.cargo;
+
+INSERT INTO persona.niveiscargos (codigo, data, valorsalario, valoranterior, observacao, dataatualizacaoanterior, cargo, nivelcargo, lastupdate)
+SELECT nvl1.codigo, nvl1.data, nvl1.valorsalario, nvl1.valoranterior, nvl1.observacao, nvl1.dataatualizacaoanterior, nvl1.cargo, nvl1.nivelcargo, nvl1.lastupdate
+FROM personamigration.niveiscargos nvl1
+LEFT JOIN persona.niveiscargos nvl2 ON nvl1.codigo = nvl2.codigo AND nvl1.cargo = nvl2.cargo
+WHERE nvl2.cargo IS NULL;
+
+--persona.trabalhadores
+
+INSERT INTO persona.trabalhadores (tipo, codigo, nome, dataadmissao, tipoadmissao, primeiroemprego, tiporegimetrabalhista, tiporegimeinss, tipoatividade, salariofixo, salariovariavel, unidadesalariofixo, unidadesalariovariavel, tipocontrato, datafimcontrato, diasexperienciacontrato, diasprorrogacaocontrato, numerohorasmensais, numerodiasperiodo, numerocontasalario, numerocontasalariodv, numerocontafgts, tiporecebimentosalario, dataopcaofgts, optantefgts, categoriatrabalhador, numeroreciborescisao, datarescisao, motivorescisao, tiporeintegracao, numeroleianistia, datareintegracaoretroativa, datareintegracaoretorno, foto, fotooriginal, raca, grauinstrucao, paisnacionalidade, sexo, estadocivil, datanascimento, ufnascimento, cidadenascimento, municipionascimento, paisnascimento, nomepai, nomemae, datachegadapais, datanaturalizacao, casadocombrasileiro, filhobrasileiro, deficientevisual, deficienteauditivo, reabilitado, numeroctps, seriectps, ufctps, dataexpedicaoctps, numeroric, orgaoemissorric, dataexpedicaoric, ufric, cidaderic, numerorg, orgaoemissorrg, dataexpedicaorg, ufrg, numerooc, orgaoemissoroc, dataexpedicaooc, datavalidadeoc, numerocnh, orgaoemissorcnh, dataexpedicaocnh, datavalidadecnh, dataprimeirahabilitacaocnh, categoriacnh, paisemissaopassaporte, numeropassaporte, orgaoemissorpassaporte, ufpassaporte, dataexpedicaopassaporte, datavalidadepassaporte, cpf, nis, numeronaturalizacao, numerote, zonate, secaote, ufte, numeroatestadoobito, datavencimentoatestadomedico, tipocertidao, numerocertidao, livrocertidao, folhacertidao, dataexpedicaocertidao, cidadecertidao, ufcertidao, cartoriocertidao, numerocr, dataexpedicaocr, seriecr, tipologradouro, municipioresidencia, paisresidencia, logradouro, numero, complemento, bairro, cidade, cep, residenciapropria, usoufgtscompraimovel, telefone, email, saldoferias, inicioperiodoaquisitivoferias, dataproximasferias, saldofgts, percentualadiantamento, descontainss, tinhaempregonoaviso, sindicalizado, datainicioanuenio, jornadareduzida, teveavisoindenizado, fgtsmesanteriorrescisaorecolhido, agentenocivo, numerocartaovt, diasemanacommeiovt, observacao, cnpjempresaanterior, matriculaempresaanterior, dataadmissaoempresaanterior, cnpjcendente, matriculacedente, dataadmissaocedente, cnpjempresasucessora, trabalhaemoutraempresa, ordemcalculoinssfolha, ordemcalculoinss13, simplesconcomitante, dddtel, sangue, ordemcalculoduplovinculo, cbo, deficienteintelectual, deficientemental, motivoadmissao, quantidademediahorassemanais, motivocontratacaotemporaria, avisoindenizadopago, dataprojecaoavisopreviopago, recolheufgtsmesanterior, regimedejornada, mesestrabalhadosoutrasempresas, infoimagem, deficientefisico, agencia, empresa, estabelecimento, acordodeprorrogacao, matriculaoutracategoria, departamento, trabalhador, matriculaoutrovinculo, trabalhadorsubstituido, horario, lotacao, nivelcargo, processoreintegracao, processoadmissao, processodemissao, processoirrf, processoinss, processomenoraprendiz, sindicato, tipofuncionario, identificacaonasajon, vinculo, status, avaliador, gestor, jornadacumpridasemanademissao, jornadasabadocompensadasemanademissao, funcao, cageddiariogerado, nivelestagio, areaatuacaoestagio, apoliceseguroestagio, nomesupervisorestagio, cpfsupervisorestagio, estagioobrigatorio, instituicaoensino, instituicaointegradora, percentualdeducaobaseirrf, percentualdeducaobaseinss, aliquotaiss, motivodesligamentodiretor, datatransferencia, empresaanterior, trabalhadorempresaanterior, lastupdate, trabalhadorcontratoanterior, subtipo, valorgratificacoesrescisao, valorbancohorasrescisao, mesesbancohorasrescisao, mesesgratificacoesrescisao, motivodispensavt, excluido, celular, dddcel, datafimmarcacaoponto, saldohoras, dataapuracaosaldohoras)
+SELECT trb1.tipo, trb1.codigo, trb1.nome, trb1.dataadmissao, trb1.tipoadmissao, trb1.primeiroemprego, trb1.tiporegimetrabalhista, trb1.tiporegimeinss, trb1.tipoatividade, trb1.salariofixo, trb1.salariovariavel, trb1.unidadesalariofixo, trb1.unidadesalariovariavel, trb1.tipocontrato, trb1.datafimcontrato, trb1.diasexperienciacontrato, trb1.diasprorrogacaocontrato, trb1.numerohorasmensais, trb1.numerodiasperiodo, trb1.numerocontasalario, trb1.numerocontasalariodv, trb1.numerocontafgts, trb1.tiporecebimentosalario, trb1.dataopcaofgts, trb1.optantefgts, trb1.categoriatrabalhador, trb1.numeroreciborescisao, trb1.datarescisao, trb1.motivorescisao, trb1.tiporeintegracao, trb1.numeroleianistia, trb1.datareintegracaoretroativa, trb1.datareintegracaoretorno, trb1.foto, trb1.fotooriginal, trb1.raca, trb1.grauinstrucao, trb1.paisnacionalidade, trb1.sexo, trb1.estadocivil, trb1.datanascimento, trb1.ufnascimento, trb1.cidadenascimento, trb1.municipionascimento, trb1.paisnascimento, trb1.nomepai, trb1.nomemae, trb1.datachegadapais, trb1.datanaturalizacao, trb1.casadocombrasileiro, trb1.filhobrasileiro, trb1.deficientevisual, trb1.deficienteauditivo, trb1.reabilitado, trb1.numeroctps, trb1.seriectps, trb1.ufctps, trb1.dataexpedicaoctps, trb1.numeroric, trb1.orgaoemissorric, trb1.dataexpedicaoric, trb1.ufric, trb1.cidaderic, trb1.numerorg, trb1.orgaoemissorrg, trb1.dataexpedicaorg, trb1.ufrg, trb1.numerooc, trb1.orgaoemissoroc, trb1.dataexpedicaooc, trb1.datavalidadeoc, trb1.numerocnh, trb1.orgaoemissorcnh, trb1.dataexpedicaocnh, trb1.datavalidadecnh, trb1.dataprimeirahabilitacaocnh, trb1.categoriacnh, trb1.paisemissaopassaporte, trb1.numeropassaporte, trb1.orgaoemissorpassaporte, trb1.ufpassaporte, trb1.dataexpedicaopassaporte, trb1.datavalidadepassaporte, trb1.cpf, trb1.nis, trb1.numeronaturalizacao, trb1.numerote, trb1.zonate, trb1.secaote, trb1.ufte, trb1.numeroatestadoobito, trb1.datavencimentoatestadomedico, trb1.tipocertidao, trb1.numerocertidao, trb1.livrocertidao, trb1.folhacertidao, trb1.dataexpedicaocertidao, trb1.cidadecertidao, trb1.ufcertidao, trb1.cartoriocertidao, trb1.numerocr, trb1.dataexpedicaocr, trb1.seriecr, trb1.tipologradouro, trb1.municipioresidencia, trb1.paisresidencia, trb1.logradouro, trb1.numero, trb1.complemento, trb1.bairro, trb1.cidade, trb1.cep, trb1.residenciapropria, trb1.usoufgtscompraimovel, trb1.telefone, trb1.email, trb1.saldoferias, trb1.inicioperiodoaquisitivoferias, trb1.dataproximasferias, trb1.saldofgts, trb1.percentualadiantamento, trb1.descontainss, trb1.tinhaempregonoaviso, trb1.sindicalizado, trb1.datainicioanuenio, trb1.jornadareduzida, trb1.teveavisoindenizado, trb1.fgtsmesanteriorrescisaorecolhido, trb1.agentenocivo, trb1.numerocartaovt, trb1.diasemanacommeiovt, trb1.observacao, trb1.cnpjempresaanterior, trb1.matriculaempresaanterior, trb1.dataadmissaoempresaanterior, trb1.cnpjcendente, trb1.matriculacedente, trb1.dataadmissaocedente, trb1.cnpjempresasucessora, trb1.trabalhaemoutraempresa, trb1.ordemcalculoinssfolha, trb1.ordemcalculoinss13, trb1.simplesconcomitante, trb1.dddtel, trb1.sangue, trb1.ordemcalculoduplovinculo, trb1.cbo, trb1.deficienteintelectual, trb1.deficientemental, trb1.motivoadmissao, trb1.quantidademediahorassemanais, trb1.motivocontratacaotemporaria, trb1.avisoindenizadopago, trb1.dataprojecaoavisopreviopago, trb1.recolheufgtsmesanterior, trb1.regimedejornada, trb1.mesestrabalhadosoutrasempresas, trb1.infoimagem, trb1.deficientefisico, trb1.agencia, trb1.empresa, trb1.estabelecimento, trb1.acordodeprorrogacao, trb1.matriculaoutracategoria, trb1.departamento, trb1.trabalhador, trb1.matriculaoutrovinculo, trb1.trabalhadorsubstituido, trb1.horario, trb1.lotacao, trb1.nivelcargo, trb1.processoreintegracao, trb1.processoadmissao, trb1.processodemissao, trb1.processoirrf, trb1.processoinss, trb1.processomenoraprendiz, trb1.sindicato, trb1.tipofuncionario, trb1.identificacaonasajon, trb1.vinculo, trb1.status, trb1.avaliador, trb1.gestor, trb1.jornadacumpridasemanademissao, trb1.jornadasabadocompensadasemanademissao, trb1.funcao, trb1.cageddiariogerado, trb1.nivelestagio, trb1.areaatuacaoestagio, trb1.apoliceseguroestagio, trb1.nomesupervisorestagio, trb1.cpfsupervisorestagio, trb1.estagioobrigatorio, trb1.instituicaoensino, trb1.instituicaointegradora, trb1.percentualdeducaobaseirrf, trb1.percentualdeducaobaseinss, trb1.aliquotaiss, trb1.motivodesligamentodiretor, trb1.datatransferencia, trb1.empresaanterior, trb1.trabalhadorempresaanterior, trb1.lastupdate, trb1.trabalhadorcontratoanterior, trb1.subtipo, trb1.valorgratificacoesrescisao, trb1.valorbancohorasrescisao, trb1.mesesbancohorasrescisao, trb1.mesesgratificacoesrescisao, trb1.motivodispensavt, trb1.excluido, trb1.celular, trb1.dddcel, trb1.datafimmarcacaoponto, trb1.saldohoras, trb1.dataapuracaosaldohoras
+FROM personamigration.trabalhadores trb1
+LEFT JOIN persona.trabalhadores trb2 ON trb1.codigo = trb2.codigo AND trb1.empresa = trb2.empresa
+WHERE trb2.trabalhador IS NULL;
+
+--persona.dependentestrabalhadores
+
+UPDATE personamigration.dependentestrabalhadores
+SET trabalhador = jnd2.trabalhador
+FROM personamigration.trabalhadores jnd1, persona.trabalhadores jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.trabalhador = dependentestrabalhadores.trabalhador;
+
+UPDATE personamigration.dependentestrabalhadores
+SET agencia = agc2.agencia
+FROM financasmigration.agencias agc1, financas.agencias agc2
+WHERE agc1.agencianumero = agc2.agencianumero
+AND agc1.nome = agc2.nome
+AND agc1.codigo = agc1.codigo;
+
+INSERT INTO persona.dependentestrabalhadores (codigo, nome, datainclusao, tipoparentesco, impostorenda, salariofamilia, pensaoalimenticia, percentualpensaoalimenticia, percentualpensaoalimenticiafgts, cpf, datanascimento, ufnascimento, cidadenascimento, cartoriocertidao, numeroregistrocertidao, numerolivrocertidao, numerofolhacertidao, dataentregacertidao, databaixacertidao, tiporecebimento, numerocontarecebimento, numerocontadvrecebimento, datavencimentodeclaracaoescolar, datavencimentovacinacao, sexo, databaixaimpostorenda, planosaude, agencia, dependentetrabalhador, dependentetrabalhadorpensao, eventopensaofolha, eventopensaoferias, eventopensaopplr, eventopensao13, trabalhador, lastupdate)
+SELECT dpd1.codigo, dpd1.nome, dpd1.datainclusao, dpd1.tipoparentesco, dpd1.impostorenda, dpd1.salariofamilia, dpd1.pensaoalimenticia, dpd1.percentualpensaoalimenticia, dpd1.percentualpensaoalimenticiafgts, dpd1.cpf, dpd1.datanascimento, dpd1.ufnascimento, dpd1.cidadenascimento, dpd1.cartoriocertidao, dpd1.numeroregistrocertidao, dpd1.numerolivrocertidao, dpd1.numerofolhacertidao, dpd1.dataentregacertidao, dpd1.databaixacertidao, dpd1.tiporecebimento, dpd1.numerocontarecebimento, dpd1.numerocontadvrecebimento, dpd1.datavencimentodeclaracaoescolar, dpd1.datavencimentovacinacao, dpd1.sexo, dpd1.databaixaimpostorenda, dpd1.planosaude, dpd1.agencia, dpd1.dependentetrabalhador, dpd1.dependentetrabalhadorpensao, dpd1.eventopensaofolha, dpd1.eventopensaoferias, dpd1.eventopensaopplr, dpd1.eventopensao13, dpd1.trabalhador, dpd1.lastupdate
+FROM personamigration.dependentestrabalhadores dpd1
+LEFT JOIN persona.dependentestrabalhadores dpd2 ON dpd1.codigo = dpd2.codigo AND dpd1.trabalhador = dpd2.trabalhador
+WHERE dpd2.dependentetrabalhador IS NULL;
+
+--persona.medicos
+
+INSERT INTO persona.medicos (codigo, nit, numeroregistroconselho, nome, categoria, ufcrm, dddtelefone, telefone, tipocrm, medico, tipoconselho, lastupdate)
+SELECT 'I' || RIGHT(med1.codigo,5), med1.nit, med1.numeroregistroconselho, med1.nome, med1.categoria, med1.ufcrm, med1.dddtelefone, med1.telefone, med1.tipocrm, med1.medico, med1.tipoconselho, med1.lastupdate
+FROM personamigration.medicos med1
+LEFT JOIN persona.medicos med2 ON med1.numeroregistroconselho = med2.numeroregistroconselho AND med1.nome = med2.nome
+WHERE med2.medico IS NULL;
+select * from persona.medicos;
+
+--persona.afastamentostrabalhadores
+
+UPDATE personamigration.afastamentostrabalhadores
+SET trabalhador = jnd2.trabalhador
+FROM personamigration.trabalhadores jnd1, persona.trabalhadores jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.trabalhador = afastamentostrabalhadores.trabalhador;
+
+INSERT INTO persona.afastamentostrabalhadores (data, dias, tipohistorico, descricao, observacao, cid, cnpjempresacessionaria, tipoonuscessionaria, tipoonussindicato, tipoacidentetransito, datainicioperiodoaquisitivo, diassaldoferias, afastamentotrabalhadorpai, trabalhador, medico, sindicato, dataproximasferias, estado, lastupdate)
+SELECT afs1.data, afs1.dias, afs1.tipohistorico, afs1.descricao, afs1.observacao, afs1.cid, afs1.cnpjempresacessionaria, afs1.tipoonuscessionaria, afs1.tipoonussindicato, afs1.tipoacidentetransito, afs1.datainicioperiodoaquisitivo, afs1.diassaldoferias, afs1.afastamentotrabalhadorpai, afs1.trabalhador, afs1.medico, afs1.sindicato, afs1.dataproximasferias, afs1.estado, afs1.lastupdate
+FROM personamigration.afastamentostrabalhadores afs1
+LEFT JOIN persona.afastamentostrabalhadores afs2 ON afs1.data = afs2.data AND afs1.trabalhador = afs2.trabalhador 
+WHERE afs2.afastamentotrabalhador IS NULL;
+
+--persona.reajustessindicatos
+
+INSERT INTO persona.reajustessindicatos (data, descricao, percentual, tipo, datadeveriatersidoconcedido, reajustesindicato, sindicato, lastupdate)
+SELECT data, descricao, percentual, tipo, datadeveriatersidoconcedido, reajustesindicato, sindicato, lastupdate
+FROM personamigration.reajustessindicatos
+WHERE (sindicato, data) NOT IN (SELECT sindicato, data FROM persona.reajustessindicatos);
+
+--persona.reajustestrabalhadores
+
+UPDATE personamigration.reajustestrabalhadores
+SET trabalhador = jnd2.trabalhador
+FROM personamigration.trabalhadores jnd1, persona.trabalhadores jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.trabalhador = reajustestrabalhadores.trabalhador;
+
+INSERT INTO persona.reajustestrabalhadores (data, descricao, tipo, percentual, salarioanterior, salarionovo, unidadesalarionovo, trabalhador, reajustesindicato, lastupdate)
+SELECT rjt1.data, rjt1.descricao, rjt1.tipo, rjt1.percentual, rjt1.salarioanterior, rjt1.salarionovo, rjt1.unidadesalarionovo, rjt1.trabalhador, NULL, rjt1.lastupdate
+FROM personamigration.reajustestrabalhadores rjt1
+LEFT JOIN persona.reajustestrabalhadores rjt2 ON rjt1.tipo = rjt2.tipo AND rjt1.trabalhador = rjt2.trabalhador AND rjt1.data = rjt2.data
+WHERE rjt2.reajustetrabalhador IS NULL;
+
+--persona.mudancastrabalhadores
+
+UPDATE personamigration.mudancastrabalhadores
+SET cargo = jnd2.cargo
+FROM personamigration.cargos jnd1, persona.cargos jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.cargo = mudancastrabalhadores.cargo;
+
+UPDATE personamigration.mudancastrabalhadores
+SET nivelcargo = jnd2.nivelcargo
+FROM personamigration.niveiscargos jnd1, persona.niveiscargos jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.cargo = jnd2.cargo
+AND jnd1.nivelcargo = mudancastrabalhadores.nivelcargo;
+
+UPDATE personamigration.mudancastrabalhadores
+SET lotacao = jnd2.lotacao
+FROM personamigration.lotacoes jnd1, persona.lotacoes jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.lotacao = mudancastrabalhadores.lotacao;
+
+UPDATE personamigration.mudancastrabalhadores
+SET horario = jnd2.horario
+FROM personamigration.horarios jnd1, persona.horarios jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.horario = mudancastrabalhadores.horario;
+
+UPDATE personamigration.mudancastrabalhadores
+SET departamento = jnd2.departamento
+FROM personamigration.departamentos jnd1, persona.departamentos jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.estabelecimento = jnd2.estabelecimento
+AND jnd1.departamento = mudancastrabalhadores.departamento;
+
+UPDATE personamigration.mudancastrabalhadores
+SET trabalhador = jnd2.trabalhador
+FROM personamigration.trabalhadores jnd1, persona.trabalhadores jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.trabalhador = mudancastrabalhadores.trabalhador;
+
+INSERT INTO persona.mudancastrabalhadores (datainicial, datafinal, tipo, simplesconcomitante, tipocondicao, estabelecimento, cargo, departamento, trabalhador, horario, lotacao, nivelcargo, numerohorasmensais, funcao, lastupdate)
+SELECT mdt1.datainicial, mdt1.datafinal, mdt1.tipo, mdt1.simplesconcomitante, mdt1.tipocondicao, mdt1.estabelecimento, mdt1.cargo, mdt1.departamento, mdt1.trabalhador, mdt1.horario, mdt1.lotacao, mdt1.nivelcargo, mdt1.numerohorasmensais, mdt1.funcao, mdt1.lastupdate
+FROM personamigration.mudancastrabalhadores mdt1
+LEFT JOIN persona.mudancastrabalhadores mdt2 ON mdt1.trabalhador = mdt2.trabalhador AND mdt1.datafinal = mdt2.datafinal AND mdt1.datainicial = mdt2.datainicial AND (mdt1.estabelecimento = mdt2.estabelecimento
+																				  OR mdt1.simplesconcomitante = mdt2.simplesconcomitante
+																				  OR mdt1.tipocondicao = mdt2.tipocondicao
+																				  OR mdt1.departamento = mdt2.departamento
+																				  OR mdt1.horario = mdt2.horario
+																				  OR mdt1.lotacao = mdt2.lotacao
+																				  OR mdt1.nivelcargo = mdt2.nivelcargo
+																				  OR mdt1.numerohorasmensais = mdt2.numerohorasmensais
+																				  OR mdt1.funcao = mdt2.funcao)
+WHERE mdt2.mudancatrabalhador IS NULL;
+
+--persona.movimentos
+
+UPDATE personamigration.movimentos
+SET lotacao = jnd2.lotacao
+FROM personamigration.lotacoes jnd1, persona.lotacoes jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.lotacao = movimentos.lotacao;
+
+UPDATE personamigration.movimentos
+SET trabalhador = jnd2.trabalhador
+FROM personamigration.trabalhadores jnd1, persona.trabalhadores jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.trabalhador = movimentos.trabalhador;
+
+INSERT INTO persona.movimentos (ordem, tipo, tipoperiodo, mesperiodo, semanaperiodo, datainicialperiodo, datafinalperiodo, mesinicialperiodo, mesfinalperiodo, anoinicialperiodo, anofinalperiodo, calculanofim, conteudo, tipoprocedencia, invisivel, folha, adiantamentofolha, decimoterceiro, adiantamentodecimoterceiro, ferias, rescisao, pplr, folhacorretiva, empresa, estabelecimento, departamento, evento, lotacaofuncionario, lotacao, sindicato, complementodecimoterceiro, lastupdate, trabalhador, complementoferias, cargo)
+SELECT mvm1.ordem, mvm1.tipo, mvm1.tipoperiodo, mvm1.mesperiodo, mvm1.semanaperiodo, mvm1.datainicialperiodo, mvm1.datafinalperiodo, mvm1.mesinicialperiodo, mvm1.mesfinalperiodo, mvm1.anoinicialperiodo, mvm1.anofinalperiodo, mvm1.calculanofim, mvm1.conteudo, mvm1.tipoprocedencia, mvm1.invisivel, mvm1.folha, mvm1.adiantamentofolha, mvm1.decimoterceiro, mvm1.adiantamentodecimoterceiro, mvm1.ferias, mvm1.rescisao, mvm1.pplr, mvm1.folhacorretiva, mvm1.empresa, mvm1.estabelecimento, mvm1.departamento, mvm1.evento, mvm1.lotacaofuncionario, mvm1.lotacao, mvm1.sindicato, mvm1.complementodecimoterceiro, mvm1.lastupdate, mvm1.trabalhador, mvm1.complementoferias, mvm1.cargo
+FROM personamigration.movimentos mvm1
+LEFT JOIN persona.movimentos mvm2 ON mvm1.trabalhador = mvm2.trabalhador AND mvm1.evento = mvm2.evento AND mvm1.lotacao = mvm2.lotacao AND mvm1.tipo = mvm2.tipo AND mvm1.datainicialperiodo = mvm2.datainicialperiodo
+WHERE mvm2.movimento IS NULL;
+
+--persona.avisosferiastrabalhadores
+
+UPDATE personamigration.avisosferiastrabalhadores
+SET trabalhador = jnd2.trabalhador
+FROM personamigration.trabalhadores jnd1, persona.trabalhadores jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.trabalhador = avisosferiastrabalhadores.trabalhador;
+
+INSERT INTO persona.avisosferiastrabalhadores (data, datainiciogozo, datafimgozo, datainicioperiodoaquisitivo, datafimperiodoaquisitivo, temabonopecuniario, observacao, tipo, trabalhador, diasvendidos, diasferiascoletivas, lastupdate)
+SELECT avt1.data, avt1.datainiciogozo, avt1.datafimgozo, avt1.datainicioperiodoaquisitivo, avt1.datafimperiodoaquisitivo, avt1.temabonopecuniario, avt1.observacao, avt1.tipo, avt1.trabalhador, avt1.diasvendidos, avt1.diasferiascoletivas, avt1.lastupdate
+FROM personamigration.avisosferiastrabalhadores avt1
+LEFT JOIN persona.avisosferiastrabalhadores avt2 on avt1.trabalhador = avt2.trabalhador AND avt1.data = avt2.data
+WHERE avt2.avisoferiastrabalhador IS NULL;
+
+--persona.avisospreviostrabalhadores
+
+UPDATE personamigration.avisospreviostrabalhadores
+SET trabalhador = jnd2.trabalhador
+FROM personamigration.trabalhadores jnd1, persona.trabalhadores jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.trabalhador = avisospreviostrabalhadores.trabalhador;
+
+INSERT INTO persona.avisospreviostrabalhadores (dataconcessao, dataprojetada, cancelado, observacaoconcessao, observacaocancelamento, tipoconcessao, tipocancelamento, datacancelamento, interrompido, avisopreviotrabalhador, trabalhador, lastupdate)
+SELECT apt1.dataconcessao, apt1.dataprojetada, apt1.cancelado, apt1.observacaoconcessao, apt1.observacaocancelamento, apt1.tipoconcessao, apt1.tipocancelamento, apt1.datacancelamento, apt1.interrompido, apt1.avisopreviotrabalhador, apt1.trabalhador, apt1.lastupdate
+FROM personamigration.avisospreviostrabalhadores apt1
+LEFT JOIN persona.avisospreviostrabalhadores apt2 on apt1.trabalhador = apt2.trabalhador AND apt1.dataconcessao = apt2.dataconcessao
+WHERE apt2.avisopreviotrabalhador IS NULL;
+
+--persona.tiposbeneficios
+
+INSERT INTO persona.tiposbeneficios (codigo, descricao, tipobeneficio, subtipo, lastupdate)
+SELECT codigo, descricao, tipobeneficio, subtipo, lastupdate
+FROM personamigration.tiposbeneficios;
+
+--persona.beneficios
+
+INSERT INTO persona.beneficios (codigo, descricao, tipovalor, tipobasevalor, valor, proporcionalizavalor, tipodesconto, tipobasedesconto, tipoaplicacaodesconto, valordesconto, tipoformulavalor, tipoformuladesconto, formulabasicacondicaovalor, formulabasicacondicaodesconto, formulabasicavalor, formulabasicadesconto, formulaavancadavalor, formulaavancadadesconto, empresa, beneficio, eventodesconto, faixavalor, faixadesconto, tipobeneficio, lastupdate)
+SELECT codigo, descricao, tipovalor, tipobasevalor, valor, proporcionalizavalor, tipodesconto, tipobasedesconto, tipoaplicacaodesconto, valordesconto, tipoformulavalor, tipoformuladesconto, formulabasicacondicaovalor, formulabasicacondicaodesconto, formulabasicavalor, formulabasicadesconto, formulaavancadavalor, formulaavancadadesconto, empresa, beneficio, eventodesconto, faixavalor, faixadesconto, tipobeneficio, lastupdate
+FROM personamigration.beneficios;
+
+--persona.beneficiostrabalhadores
+
+INSERT INTO persona.beneficiostrabalhadores (valor, valordesconto, quantidade, tipoperiodo, mesperiodo, mesinicialperiodo, mesfinalperiodo, anoinicialperiodo, anofinalperiodo, beneficio, beneficiotrabalhador, trabalhador, lastupdate, lotacao)
+SELECT valor, valordesconto, quantidade, tipoperiodo, mesperiodo, mesinicialperiodo, mesfinalperiodo, anoinicialperiodo, anofinalperiodo, beneficio, beneficiotrabalhador, trabalhador, lastupdate, lotacao
+FROM personamigration.beneficiostrabalhadores;
+
+--persona.concessionariasvts
+
+INSERT INTO persona.concessionariasvts (codigo, nome, concessionariavt, lastupdate)
+SELECT csv1.codigo, csv1.nome, csv1.concessionariavt, csv1.lastupdate
+FROM personamigration.concessionariasvts csv1
+LEFT JOIN persona.concessionariasvts csv2 on csv1.codigo = csv2.codigo
+WHERE csv2.concessionariavt IS NULL;
+
+--persona.tarifasconcessionariasvts
+
+UPDATE personamigration.tarifasconcessionariasvts
+SET concessionariavt = tvt.concessionariavt
+FROM persona.concessionariasvts tvt, personamigration.concessionariasvts tvt1
+WHERE tarifasconcessionariasvts.concessionariavt = tvt1.concessionariavt
+AND tvt1.codigo = tvt.codigo
+AND tvt1.nome = tvt1.nome; 
+
+INSERT INTO persona.tarifasconcessionariasvts (codigo, descricao, valor, tipo, codigoexterno, concessionariavt, tarifaconcessionariavt, lastupdate)
+SELECT tcv1.codigo, tcv1.descricao, tcv1.valor, tcv1.tipo, tcv1.codigoexterno, tcv1.concessionariavt, tcv1.tarifaconcessionariavt, tcv1.lastupdate
+FROM personamigration.tarifasconcessionariasvts tcv1
+LEFT JOIN persona.tarifasconcessionariasvts tcv2 on tcv1.codigo = tcv2.codigo AND tcv1.concessionariavt = tcv2.concessionariavt
+WHERE tcv2.tarifaconcessionariavt IS NULL;
+
+--persona.tarifasconcessionariasvtstrabalhadores
+
+INSERT INTO persona.tarifasconcessionariasvtstrabalhadores (quantidade, trabalhador, tarifaconcessionariavt, tarifaconcessionariavttrabalhador, lastupdate)
+SELECT tcvt1.quantidade, tcvt1.trabalhador, tcvt1.tarifaconcessionariavt, tcvt1.tarifaconcessionariavttrabalhador, tcvt1.lastupdate
+FROM personamigration.tarifasconcessionariasvtstrabalhadores tcvt1
+LEFT JOIN persona.tarifasconcessionariasvtstrabalhadores tcvt2 on tcvt1.trabalhador = tcvt2.trabalhador AND tcvt1.tarifaconcessionariavt = tcvt2.tarifaconcessionariavt
+WHERE tcvt2.tarifaconcessionariavttrabalhador IS NULL;
+
+--persona.valestransportespersonalizadostrabalhadores
+
+INSERT INTO persona.valestransportespersonalizadostrabalhadores (datainicial, datafinal, tipo, conteudo, trabalhador, valetransportepersonalizadotrabalhador, lastupdate)
+SELECT datainicial, datafinal, tipo, conteudo, trabalhador, valetransportepersonalizadotrabalhador, lastupdate
+FROM personamigration.valestransportespersonalizadostrabalhadores;
+
+--persona.eventos
+
+UPDATE personamigration.eventos
+SET empresa = ev2.empresa
+FROM nsmigration.empresas ev1, ns.empresas ev2
+WHERE eventos.empresa = ev1.empresa
+AND ev1.raizcnpj = ev2.raizcnpj
+AND ev1.ordemcnpj = ev2.ordemcnpj;
+
+INSERT INTO persona.eventos(codigo,
+nome,
+tipovalor,
+unidade,
+percentual,
+incideinss,
+incideirrf,
+incidefgts,
+categoria,
+totalizarais,
+totalizainforme,
+acumulahoraextra,
+valorminimo,
+valormaximo,
+basefaixa,
+incidepis,
+incideencargos,
+pagobancohoras,
+fazproporcaopiso,
+valorpiso,
+codigohomolognet,
+tipomedia,
+valorintegralbasevh,
+incidedsr,
+periodoanuenio,
+qtdemaximaanuenio,
+rubricaesocial,
+incidesindical,
+somamediaferias,
+somamedia13,
+somamediarescisao,
+somamaiorremuneracao,
+tipocalculo,
+acumulavalordia,
+valorintegralbasevalordia,
+incidesalariofamilia,
+fazproporcaocalculo,
+comparacomtarifas,
+valorintegralbasesindical,
+valorintegralbasesalariofamilia,
+incidepensaoalimenticia,
+somamediamaternidade,
+empresa,
+evento,
+eventofaixa,
+faixa,
+instituicao,
+tipoformula,
+formulabasicacondicao,
+formulabasicavalor,
+formulabasicareferencia,
+formulaavancada,
+somentecompoemaiorremuneracao,
+tenant,
+classificacaofinanceira,
+somarbasevalorhoramaiorremuneracaorescisao,
+padrao,
+informativa,
+desabilitado,
+lastupdate,
+calcularpelopercentualdoreajustesindical,
+folha,
+adiantamentofolha,
+folhacorretiva,
+decimoterceiro,
+adiantamentodecimoterceiro,
+complementodecimoterceiro,
+ferias,
+complementoferias,
+rescisao,
+pplr,
+considerarsomentevalordocalculoatualemformulas,
+valorconteudolimitealerta,
+valorconteudolimiteerro,
+ignorarnocalculosindical)
+SELECT ev.codigo,
+ev.nome,
+ev.tipovalor,
+ev.unidade,
+ev.percentual,
+ev.incideinss,
+ev.incideirrf,
+ev.incidefgts,
+ev.categoria,
+ev.totalizarais,
+ev.totalizainforme,
+ev.acumulahoraextra,
+ev.valorminimo,
+ev.valormaximo,
+ev.basefaixa,
+ev.incidepis,
+ev.incideencargos,
+ev.pagobancohoras,
+ev.fazproporcaopiso,
+ev.valorpiso,
+ev.codigohomolognet,
+ev.tipomedia,
+ev.valorintegralbasevh,
+ev.incidedsr,
+ev.periodoanuenio,
+ev.qtdemaximaanuenio,
+ev.rubricaesocial,
+ev.incidesindical,
+ev.somamediaferias,
+ev.somamedia13,
+ev.somamediarescisao,
+ev.somamaiorremuneracao,
+ev.tipocalculo,
+ev.acumulavalordia,
+ev.valorintegralbasevalordia,
+ev.incidesalariofamilia,
+ev.fazproporcaocalculo,
+ev.comparacomtarifas,
+ev.valorintegralbasesindical,
+ev.valorintegralbasesalariofamilia,
+ev.incidepensaoalimenticia,
+ev.somamediamaternidade,
+ev.empresa,
+ev.evento,
+ev.eventofaixa,
+ev.faixa,
+ev.instituicao,
+ev.tipoformula,
+ev.formulabasicacondicao,
+ev.formulabasicavalor,
+ev.formulabasicareferencia,
+ev.formulaavancada,
+ev.somentecompoemaiorremuneracao,
+ev.tenant,
+ev.classificacaofinanceira,
+ev.somarbasevalorhoramaiorremuneracaorescisao,
+ev.padrao,
+ev.informativa,
+ev.desabilitado,
+ev.lastupdate,
+ev.calcularpelopercentualdoreajustesindical,
+ev.folha,
+ev.adiantamentofolha,
+ev.folhacorretiva,
+ev.decimoterceiro,
+ev.adiantamentodecimoterceiro,
+ev.complementodecimoterceiro,
+ev.ferias,
+ev.complementoferias,
+ev.rescisao,
+ev.pplr,
+ev.considerarsomentevalordocalculoatualemformulas,
+ev.valorconteudolimitealerta,
+ev.valorconteudolimiteerro,
+ev.ignorarnocalculosindical
+FROM personamigration.eventos ev
+LEFT JOIN persona.eventos eve ON ev.codigo = eve.codigo AND ev.nome = eve.nome
+WHERE eve.evento IS NULL;
+
+--persona.calculostrabalhadores
+
+UPDATE personamigration.calculostrabalhadores
+SET lotacao = lot2.lotacao
+FROM personamigration.lotacoes lot1, persona.lotacoes lot2
+WHERE REPLACE(lot1.codigo,'I','') = REPLACE(lot2.codigo,'I','')
+AND lot1.empresa = lot2.empresa
+AND lot1.lotacao = calculostrabalhadores.lotacao;
+
+UPDATE personamigration.calculostrabalhadores
+SET trabalhador = jnd2.trabalhador
+FROM personamigration.trabalhadores jnd1, persona.trabalhadores jnd2
+WHERE jnd1.codigo = jnd2.codigo
+AND jnd1.empresa = jnd2.empresa
+AND jnd1.trabalhador = calculostrabalhadores.trabalhador;
+
+CREATE TEMP TABLE calculostrabalhadoreslegado (calculotrabalhador UUID, calculotrabalhadornovo UUID NOT NULL DEFAULT uuid_generate_v4());
+
+INSERT INTO calculostrabalhadoreslegado (calculotrabalhador)
+SELECT calculotrabalhador FROM personamigration.calculostrabalhadores;
+
+UPDATE personamigration.calculostrabalhadores
+SET calculotrabalhador = calculostrabalhadoreslegado.calculotrabalhadornovo
+FROM calculostrabalhadoreslegado
+WHERE calculostrabalhadores.calculotrabalhador = calculostrabalhadoreslegado.calculotrabalhador;
+
+INSERT INTO persona.calculostrabalhadores (ordem, ano, mes, semana, datapagamento, referencia, valor, invisivel, anogerador, mesgerador, semanageradora, calculogerador, tipo, tipoperiodo, mesperiodo, semanaperiodo, datainicialperiodo, datafinalperiodo, mesinicialperiodo, mesfinalperiodo, anoinicialperiodo, anofinalperiodo, calculanofim, conteudo, tipoprocedencia, tipomovimento, valorbruto, estabelecimentomovimento, calculotrabalhador, departamentomovimento, dependentetrabalhador, evento, trabalhador, lotacao, sindicatomovimento, avisopreviotrabalhador, sindicato, lastupdate, cargomovimento, origemcalculo, reajustesindicato, calculotrabalhadororigem)
+SELECT ct1.ordem, ct1.ano, ct1.mes, ct1.semana, ct1.datapagamento, ct1.referencia, ct1.valor, ct1.invisivel, ct1.anogerador, ct1.mesgerador, ct1.semanageradora, ct1.calculogerador, ct1.tipo, ct1.tipoperiodo, ct1.mesperiodo, ct1.semanaperiodo, ct1.datainicialperiodo, ct1.datafinalperiodo, ct1.mesinicialperiodo, ct1.mesfinalperiodo, ct1.anoinicialperiodo, ct1.anofinalperiodo, ct1.calculanofim, ct1.conteudo, ct1.tipoprocedencia, ct1.tipomovimento, ct1.valorbruto, ct1.estabelecimentomovimento, ct1.calculotrabalhador, ct1.departamentomovimento, ct1.dependentetrabalhador, ct1.evento, ct1.trabalhador, ct1.lotacao, ct1.sindicatomovimento, ct1.avisopreviotrabalhador, ct1.sindicato, ct1.lastupdate, ct1.cargomovimento, ct1.origemcalculo, ct1.reajustesindicato, ct1.calculotrabalhadororigem
+FROM personamigration.calculostrabalhadores ct1;
+
+
+--persona.detalhamentoscalculostrabalhadores
+
+UPDATE personamigration.detalhamentoscalculostrabalhadores
+SET calculotrabalhador = calculostrabalhadoreslegado.calculotrabalhadornovo
+FROM calculostrabalhadoreslegado
+WHERE detalhamentoscalculostrabalhadores.calculotrabalhador = calculostrabalhadoreslegado.calculotrabalhador;
+
+INSERT INTO persona.detalhamentoscalculostrabalhadores (calculotrabalhador, tipo, evento, valor, valorbruto, lastupdate)
+SELECT calculotrabalhador, tipo, evento, valor, valorbruto, lastupdate
+FROM personamigration.detalhamentoscalculostrabalhadores;

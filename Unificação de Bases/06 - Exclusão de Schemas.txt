@@ -1,0 +1,3 @@
+﻿DROP SCHEMA financasmigration CASCADE;
+DROP SCHEMA personamigration CASCADE;
+DROP SCHEMA nsmigration CASCADE;

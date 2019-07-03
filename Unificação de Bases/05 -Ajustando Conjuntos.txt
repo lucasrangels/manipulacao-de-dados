@@ -1,0 +1,44 @@
+DO $$
+
+DECLARE 
+
+_ESTABELECIMENTOS record;
+_LOTACOES record;
+_CONJUNTOS_FICHA record;
+_CONJUNTOS_CLIENTES record;
+
+begin
+	FOR _ESTABELECIMENTOS IN (SELECT estabelecimento FROM ns.estabelecimentos) LOOP
+				
+		FOR _CONJUNTOS_FICHA IN (SELECT conjunto FROM ns.estabelecimentosconjuntos WHERE estabelecimento = _ESTABELECIMENTOS.estabelecimento AND cadastro = 5) LOOP
+			raise notice 'FICHA : %', _CONJUNTOS_FICHA.conjunto;
+			
+			FOR _LOTACOES IN (SELECT tomador, codigo FROM persona.lotacoes WHERE tomador is not null AND estabelecimento = _ESTABELECIMENTOS.estabelecimento) LOOP
+
+				raise notice 'TOMADOR : %', _LOTACOES.codigo;
+			
+				IF NOT EXISTS(SELECT 1 FROM ns.conjuntosfichas WHERE (conjunto = _CONJUNTOS_FICHA.conjunto) AND (registro = _LOTACOES.tomador))
+					THEN
+						INSERT INTO ns.conjuntosfichas(conjunto, registro) VALUES (_CONJUNTOS_FICHA.conjunto, _LOTACOES.tomador);					
+					END IF;							
+			END LOOP;				
+		END LOOP;
+							
+		FOR _CONJUNTOS_CLIENTES IN (SELECT conjunto FROM ns.estabelecimentosconjuntos WHERE estabelecimento = _ESTABELECIMENTOS.estabelecimento AND cadastro = 6) LOOP	
+			raise notice 'CLIENTE : %', _CONJUNTOS_CLIENTES.conjunto;
+			
+			FOR _LOTACOES IN (SELECT tomador, codigo FROM persona.lotacoes WHERE tomador is not null AND estabelecimento = _ESTABELECIMENTOS.estabelecimento ) LOOP
+				
+				raise notice 'TOMADOR : %', _LOTACOES.codigo;
+			
+				IF NOT EXISTS(SELECT 1 FROM ns.conjuntosclientes WHERE (conjunto = _CONJUNTOS_CLIENTES.conjunto) AND (registro = _LOTACOES.tomador))
+					THEN
+						INSERT INTO ns.conjuntosclientes(conjunto, registro) VALUES (_CONJUNTOS_CLIENTES.conjunto, _LOTACOES.tomador);					
+					END IF;
+							
+				END LOOP;				
+			END LOOP;
+		END LOOP;
+
+
+END; $$

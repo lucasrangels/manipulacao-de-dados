@@ -1,0 +1,3 @@
+﻿ALTER SCHEMA financas RENAME TO financasmigration;
+ALTER SCHEMA persona RENAME TO personamigration;
+ALTER SCHEMA ns RENAME TO nsmigration;
