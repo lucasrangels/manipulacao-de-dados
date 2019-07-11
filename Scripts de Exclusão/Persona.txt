@@ -1,0 +1,462 @@
+DO $$
+
+DECLARE 
+empresa_nome UUID[];
+empresa_cod varchar[];
+
+begin
+
+--INSIRA O UUID DA EMPRESA(S) ABAIXO
+empresa_nome = array['INSIRA O UUID AQUI']::uuid[];
+
+
+
+
+
+
+
+--Exclusão do Persona
+
+empresa_cod = array(SELECT CODIGO FROM NS.EMPRESAS WHERE EMPRESA = any(empresa_nome))::varchar;
+
+RAISE NOTICE 'Excluindo Persona SQL da(s) empresa(s) %', empresa_cod;
+
+delete from persona.movimentos
+where empresa= any(empresa_nome);
+
+delete from persona.mudancastrabalhadores
+where trabalhador in(select trabalhador from persona.trabalhadores
+where empresa= any(empresa_nome));
+
+delete from persona.mudancastrabalhadores 
+where nivelcargo IN (Select nivelcargo from persona.niveiscargos where cargo IN (Select cargo FROM persona.cargos where departamento IN (Select departamento FROM persona.departamentos WHERE estabelecimento IN (Select estabelecimento FROM ns.estabelecimentos WHERE empresa = any(empresa_nome)))));
+
+delete from persona.guiasprevidenciasocialdepartamentos where departamento IN (Select departamento FROM persona.departamentos WHERE estabelecimento IN (Select estabelecimento FROM ns.estabelecimentos WHERE empresa = any(empresa_nome)));
+
+
+UPDATE persona.trabalhadores 
+	SET trabalhadorempresaanterior = NULL
+	WHERE trabalhadorempresaanterior IN (SELECT trabalhador FROM persona.trabalhadores WHERE empresa = any(empresa_nome));
+
+UPDATE persona.trabalhadores
+	SET nivelcargo = NULL
+	WHERE nivelcargo IN (Select nivelcargo FROM persona.trabalhadores WHERE empresa = any(empresa_nome));
+
+delete from persona.niveiscargos where cargo IN (Select cargo FROM persona.cargos where departamento IN (Select departamento FROM persona.departamentos WHERE estabelecimento IN (Select estabelecimento FROM ns.estabelecimentos WHERE empresa = any(empresa_nome))));
+
+delete from persona.cargos where departamento IN (Select departamento FROM persona.departamentos WHERE estabelecimento IN (Select estabelecimento FROM ns.estabelecimentos WHERE empresa = any(empresa_nome)));
+
+--deletando todos detalhamentos de calculos trabalhadores 
+delete  from persona.detalhamentoscalculostrabalhadores
+where calculotrabalhador in (select calculotrabalhador from persona.calculostrabalhadores
+where trabalhador in(select trabalhador from persona.trabalhadores
+where empresa= any(empresa_nome)));
+
+--deletando calculos trabalhadores
+delete from persona.calculostrabalhadores
+where trabalhador in(select trabalhador from persona.trabalhadores
+where empresa= any(empresa_nome));
+
+RAISE NOTICE '1/5';
+
+--deletando faltas trabalhadores
+delete from persona.faltastrabalhadores
+where trabalhador in (select trabalhador from persona.trabalhadores
+where empresa= any(empresa_nome));
+
+--deletando afastamentos
+delete from persona.afastamentostrabalhadores
+where trabalhador in(select trabalhador from persona.trabalhadores
+where empresa= any(empresa_nome));
+
+--deletando avisos ferias
+delete from persona.avisosferiastrabalhadores
+where trabalhador in(select trabalhador from persona.trabalhadores
+where empresa= any(empresa_nome));
+
+--deletando outros recebimentos
+delete from persona.outrosrecebimentostrabalhadores
+where trabalhador in(select trabalhador from persona.trabalhadores
+where empresa= any(empresa_nome));
+
+--deletando historicos trabalhadores
+delete from persona.historicostrabalhadores
+where trabalhador in(select trabalhador from persona.trabalhadores
+where empresa= any(empresa_nome));
+
+
+--delete tarifas concessionarias
+delete from persona.tarifasconcessionariasvtstrabalhadores
+where trabalhador in(select trabalhador from persona.trabalhadores
+where empresa= any(empresa_nome));
+
+	delete from persona.planosaudedependentesvaloresmensais where planosaudedependentetrabalhador in(select planosaudedependentetrabalhador from persona.planossaudedependentestrabalhadores
+	where dependentetrabalhador in( select dependentetrabalhador from persona.dependentestrabalhadores
+	where trabalhador  in(select trabalhador from persona.trabalhadores
+	where empresa= any(empresa_nome))));	
+
+delete from persona.planossaudedependentestrabalhadores 
+where dependentetrabalhador in (select dependentetrabalhador from persona.dependentestrabalhadores
+	where trabalhador in(select trabalhador from persona.trabalhadores
+	where empresa= any(empresa_nome)));	
+	
+	--deletar para dependentes 
+	delete from  persona.documentosdependentescolaboradores
+	where dependentetrabalhador in( select dependentetrabalhador from persona.dependentestrabalhadores
+	where trabalhador  in(select trabalhador from persona.trabalhadores where empresa = any(empresa_nome)));
+
+--Delestando os dependentes
+delete from persona.dependentestrabalhadores
+where trabalhador in(select trabalhador from persona.trabalhadores
+where empresa= any(empresa_nome));
+
+--deletando Intervalo Jornada
+delete from persona.intervalosjornadas
+where jornada in (select jornada from persona.jornadas
+where empresa= any(empresa_nome));
+
+--deletando movimentos de ponto
+delete from persona.movimentosponto
+where empresa= any(empresa_nome);
+
+-- deletando reajuste trabalhadores
+delete from persona.reajustestrabalhadores
+where trabalhador in(select trabalhador from persona.trabalhadores
+where empresa = any(empresa_nome));
+
+--DELETENADO AVISOS PREVIOS
+delete FROM PERSONA.AVISOSPREVIOSTRABALHADORES
+where trabalhador in(select trabalhador from persona.trabalhadores
+where empresa = any(empresa_nome));
+
+--deletando reajuste sindicato
+delete from persona.reajustessindicatos
+where reajustesindicato not in(select reajustesindicato from persona.reajustestrabalhadores);
+
+delete from persona.planossaudetrabalhadores 
+where trabalhador in(select trabalhador from persona.trabalhadores
+where empresa = any(empresa_nome));
+
+	--deletando riscosambientestrabalhadores
+	delete from persona.riscosambientestrabalhadores where ambientetrabalhador in 
+	(select ambientetrabalhador from persona.ambientestrabalhadores 
+	where trabalhador in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome)));
+
+	--deletando medicosambientestrabalhadores
+	delete from persona.medicosambientestrabalhadores where ambientetrabalhador in 
+	(select ambientetrabalhador from persona.ambientestrabalhadores 
+	where trabalhador in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome)));
+
+	-- delete ambientestrabalhadores
+	delete from persona.ambientestrabalhadores 
+	where trabalhador in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome));
+
+	--deletar para excluir o aso
+		delete from persona.analisesbiologicastrabalhadores
+		where asotrabalhador in(select asotrabalhador 
+		from persona.asostrabalhadores 
+		where trabalhador in(select trabalhador from persona.trabalhadores
+		where empresa = any(empresa_nome)));
+
+		delete from persona.examesasostrabalhadores
+		where asotrabalhador in(select asotrabalhador 
+		from persona.asostrabalhadores
+		where trabalhador in(select trabalhador from persona.trabalhadores 
+		where empresa = any(empresa_nome)));
+
+		delete from persona.riscosocupacionaisasostrabalhadores
+		where asotrabalhador in(select asotrabalhador 
+		from persona.asostrabalhadores
+		where trabalhador in(select trabalhador from persona.trabalhadores 
+		where empresa = any(empresa_nome)));
+
+RAISE NOTICE '2/5';
+
+	--delete asostrabalhadores
+	delete from persona.asostrabalhadores 
+	where trabalhador in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome));
+
+	-- delete atividadestrabalhadores
+	delete from persona.atividadestrabalhadores 
+	where trabalhador in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome));
+
+	--delete calculosbeneficiostrabalhadores
+	--select * from persona.calculosbeneficiostrabalhadores 
+	delete from persona.calculosbeneficiostrabalhadores 
+	where trabalhador in(select trabalhador from persona.trabalhadores
+	where empresa = any(empresa_nome));
+
+	--delete camposespeciaistrabalhadores
+	--select * from persona.camposespeciaistrabalhadores 
+	delete from persona.camposespeciaistrabalhadores 
+	where trabalhador in(select trabalhador from persona.trabalhadores
+	where empresa = any(empresa_nome));
+	
+	--delete para cattrabalhador 
+	delete from persona.testemunhascatstrabalhadores 
+	where cattrabalhador in(select cattrabalhador 
+	from persona.catstrabalhadores 
+	where trabalhador  in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome)));
+
+	delete from persona.partesatingidascatstrabalhadores 
+	where cattrabalhador in(select cattrabalhador 
+	from persona.catstrabalhadores 
+	where trabalhador  in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome)));
+		
+	--delete catstrabalhadores
+	--select * from persona.catstrabalhadores 
+	delete from persona.catstrabalhadores 
+	where trabalhador  in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome));
+
+	--delete codigosexternostrabalhadores
+	--select * from persona.codigosexternostrabalhadores 
+	delete from persona.codigosexternostrabalhadores 
+	where trabalhador  in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome));
+
+	--delete consolidacao
+	--select * from persona.consolidacao 
+	delete from persona.consolidacao 
+	where trabalhador  in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome));
+
+	--delete darftrabalhadores
+	--select * from persona.darftrabalhadores 
+	delete from persona.darftrabalhadores 
+	where trabalhador  in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome));
+
+	--delete documentoscolaboradores
+	--select * from persona.documentoscolaboradores 
+	delete from persona.documentoscolaboradores 
+	where trabalhador  in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome));
+
+	--deletando para emprestimostrabalhadores
+		delete from persona.parcelasemprestimostrabalhadores
+		where emprestimotrabalhador in(select emprestimotrabalhador from persona.emprestimostrabalhadores 
+		where trabalhador  in(select trabalhador from persona.trabalhadores 
+		where empresa = any(empresa_nome)));
+		
+	--delete emprestimostrabalhadores
+	--select * from persona.emprestimostrabalhadores 
+	delete from persona.emprestimostrabalhadores 
+	where trabalhador  in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome));
+
+	--delete escalasfolgastrabalhadores
+	--select * from persona.escalasfolgastrabalhadores 
+	delete from persona.escalasfolgastrabalhadores 
+	where trabalhador  in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome));
+
+	--delete examestoxicologicostrabalhadores
+	--select * from persona.examestoxicologicostrabalhadores 
+	delete from persona.examestoxicologicostrabalhadores 
+	where trabalhador  in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome));
+
+	--delete grcstrabalhadores
+	--select * from persona.grcstrabalhadores 
+	delete from persona.grcstrabalhadores 
+	where trabalhador  in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome));
+
+	--delete grrftrabalhadores
+	--select * from persona.grrftrabalhadores 
+	delete from persona.grrftrabalhadores 
+	where trabalhador  in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome));
+
+RAISE NOTICE '3/5';
+
+
+
+		--delete guiasprevidenciasocialempresastrabalhadores
+	--select * from persona.guiasprevidenciasocialempresastrabalhadores 
+	delete from persona.guiasprevidenciasocialempresastrabalhadores 
+	where trabalhador  in(select trabalhador from persona.trabalhadores where empresa = any(empresa_nome));
+
+	--delete guiasprevidenciasocialtrabalhadores
+	--select * from persona.guiasprevidenciasocialtrabalhadores 
+	delete from persona.guiasprevidenciasocialtrabalhadores 
+	where trabalhador  in(select trabalhador from persona.trabalhadores where empresa = any(empresa_nome));
+
+	--delete guiassefiptrabalhadores
+	--select * from persona.guiassefiptrabalhadores 
+	delete from persona.guiassefiptrabalhadores 
+	where trabalhador  in(select trabalhador from persona.trabalhadores where empresa = any(empresa_nome));
+
+
+	--delete pedidosbeneficiosalelosodexotrabalhador
+	--select * from persona.pedidosbeneficiosalelosodexotrabalhador 
+	delete from persona.pedidosbeneficiosalelosodexotrabalhador 
+	where trabalhador  in(select trabalhador from persona.trabalhadores where empresa = any(empresa_nome));
+
+	--delete pontotrabalhadores
+	--select * from persona.pontotrabalhadores 
+	delete from persona.pontotrabalhadores 
+	where trabalhador  in(select trabalhador from persona.trabalhadores where empresa = any(empresa_nome));
+
+	--delete provisoes13trabalhadores
+	--select * from persona.provisoes13trabalhadores 
+	delete from persona.provisoes13trabalhadores 
+	where trabalhador  in(select trabalhador from persona.trabalhadores where empresa = any(empresa_nome));
+
+	--delete provisoesferiastrabalhadores
+	--select * from persona.provisoesferiastrabalhadores 
+	delete from persona.provisoesferiastrabalhadores 
+	where trabalhador  in(select trabalhador from persona.trabalhadores where empresa = any(empresa_nome));
+
+	--delete salariosliquidostrabalhadores
+	--select * from persona.salariosliquidostrabalhadores 
+	delete from persona.salariosliquidostrabalhadores 
+	where trabalhador  in(select trabalhador from persona.trabalhadores where empresa = any(empresa_nome));
+
+	delete from persona.valestransportespersonalizadostrabalhadores 
+	where trabalhador in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome));
+
+	--delete ponto.historicos
+	delete from ponto.historicos
+	where trabalhador in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome));
+
+	--deletando inconsistenciaspontotrabalhadores
+	delete from ponto.inconsistenciaspontotrabalhadores
+	where trabalhador in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome));
+	
+	--pagamentos lançamentos 
+	delete from ponto.pagamentoslancamentos
+	where lancamento in (select lancamento from ponto.lancamentos
+	where trabalhador in(select trabalhador from persona.trabalhadores 
+	where empresa = any(empresa_nome)));
+
+
+	delete from ponto.ajustes 
+	where marcacao in(select marcacao from ponto.marcacoes
+	where trabalhador in(select trabalhador from persona.trabalhadores
+	where empresa = any(empresa_nome)));
+	
+	delete from ponto.marcacoes
+	where trabalhador in(select trabalhador 
+	from persona.trabalhadores 
+	where empresa = any(empresa_nome));
+
+	delete from ponto.lancamentos
+	where trabalhador in(select trabalhador 
+	from persona.trabalhadores 
+	where empresa = any(empresa_nome));
+	
+
+ 
+--deletando trabalhadores
+
+delete from persona.movimentos
+where trabalhador IN (select trabalhador from persona.trabalhadores where empresa = any(empresa_nome));
+
+delete from persona.salariosliquidostotaistrabalhadores where trabalhador IN (select trabalhador from persona.trabalhadores where empresa = any(empresa_nome));
+
+delete from persona.trabalhadores
+where empresa= any(empresa_nome);
+
+--deletando departamentos
+delete from persona.departamentos
+where estabelecimento in (select estabelecimento from ns.estabelecimentos
+where empresa= any(empresa_nome));
+
+--deletando horarios
+delete from persona.horarios
+where empresa= any(empresa_nome);
+
+--deletando jornadas
+delete from persona.jornadas 
+where empresa= any(empresa_nome);
+
+RAISE NOTICE '4/5';
+
+--deletando nivel de cargo
+delete from persona.niveiscargos
+where cargo in(select cargo from persona.cargos
+where empresa = any(empresa_nome));
+
+--deletando relatorios
+delete FROM PERSONA.RELATORIOSGRAVADOSEMPRESAS WHERE EMPRESA= any(empresa_nome);
+
+--deletando cargos
+delete from persona.cargos
+where empresa= any(empresa_nome);
+
+--deletando lotações
+delete from persona.lotacoes
+where empresa= any(empresa_nome);
+
+--deletando gpsestabelecimentos
+delete from persona.historicosgpsestabelecimentos
+where estabelecimento in (select estabelecimento from ns.estabelecimentos
+where empresa= any(empresa_nome));
+
+--deletando apuração de ponto
+delete FROM PONTO.APURACOESPONTO WHERE EMPRESA= any(empresa_nome);
+
+delete from contabilizacao.contabilizacaorubricas where empresa= any(empresa_nome);
+
+delete from persona.planossauderubricas where rubrica in(select evento  from persona.eventos 
+where empresa in(select empresa from ns.empresas where empresa= any(empresa_nome)));
+
+delete from contabilizacao.pendencias where contabilizacaorubrica IN (Select contabilizacaorubrica from contabilizacao.contabilizacaorubricas WHERE rubrica IN (Select evento from persona.eventos where codigo not in ('0001',  '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009', '0010', '0011', '0012', '0013', '0014', '0015', '0016', '0017', '0018', '0019', '0020', '0021', '0022', '0023', '0024', '0025', '0026', '0027', '0028', '0029', '0030', '0031', '0032', '0033', '0034', '0035', '0036', '0037', '0038', '0039', '0040', '0041', '0042', '0043', '0044', '0045', '0046', '0047', '0048', '0049', '0050', '0051', '0052', '0053', '0054', '0055', '0056', '0057', '0058', '0059', '0060', '0061', '0062', '0063', '0064', '0065', '0066', '0067', '0068', '0069', '0070', '0071', '0072', '0073', '0074', '0075', '0076', '0077', '0078', '0079', '0080', '0081', '0082', '0083', '0084', '0085', '0086', '0087', '0088', '0089', '0090', '0091', '0092', '0093', '0094', '0095', '0096', '0097', '0098', '0099', '0100', '0101', '0102', '0103', '0104', '0105', '0106', '0107', '0108', '0109', '0110', '0111', '0112', '0113', '0114', '0115', '0116', '0117', '0118', '0119', '0120', '0121', '0122', '0123', '0124', '0125', '0126', '0127', '0128', '0129', '0130', '0131', '0132', '0133', '0134', '0135')
+and empresa in(select empresa from ns.empresas where empresa= any(empresa_nome))));
+
+delete from contabilizacao.contabilizacaorubricas WHERE rubrica IN (Select evento from persona.eventos where codigo not in ('0001',  '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009', '0010', '0011', '0012', '0013', '0014', '0015', '0016', '0017', '0018', '0019', '0020', '0021', '0022', '0023', '0024', '0025', '0026', '0027', '0028', '0029', '0030', '0031', '0032', '0033', '0034', '0035', '0036', '0037', '0038', '0039', '0040', '0041', '0042', '0043', '0044', '0045', '0046', '0047', '0048', '0049', '0050', '0051', '0052', '0053', '0054', '0055', '0056', '0057', '0058', '0059', '0060', '0061', '0062', '0063', '0064', '0065', '0066', '0067', '0068', '0069', '0070', '0071', '0072', '0073', '0074', '0075', '0076', '0077', '0078', '0079', '0080', '0081', '0082', '0083', '0084', '0085', '0086', '0087', '0088', '0089', '0090', '0091', '0092', '0093', '0094', '0095', '0096', '0097', '0098', '0099', '0100', '0101', '0102', '0103', '0104', '0105', '0106', '0107', '0108', '0109', '0110', '0111', '0112', '0113', '0114', '0115', '0116', '0117', '0118', '0119', '0120', '0121', '0122', '0123', '0124', '0125', '0126', '0127', '0128', '0129', '0130', '0131', '0132', '0133', '0134', '0135')
+and empresa in(select empresa from ns.empresas where empresa= any(empresa_nome)));
+
+delete from contabilizacao.pendencias WHERE rubrica IN (Select evento from persona.eventos where codigo not in ('0001',  '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009', '0010', '0011', '0012', '0013', '0014', '0015', '0016', '0017', '0018', '0019', '0020', '0021', '0022', '0023', '0024', '0025', '0026', '0027', '0028', '0029', '0030', '0031', '0032', '0033', '0034', '0035', '0036', '0037', '0038', '0039', '0040', '0041', '0042', '0043', '0044', '0045', '0046', '0047', '0048', '0049', '0050', '0051', '0052', '0053', '0054', '0055', '0056', '0057', '0058', '0059', '0060', '0061', '0062', '0063', '0064', '0065', '0066', '0067', '0068', '0069', '0070', '0071', '0072', '0073', '0074', '0075', '0076', '0077', '0078', '0079', '0080', '0081', '0082', '0083', '0084', '0085', '0086', '0087', '0088', '0089', '0090', '0091', '0092', '0093', '0094', '0095', '0096', '0097', '0098', '0099', '0100', '0101', '0102', '0103', '0104', '0105', '0106', '0107', '0108', '0109', '0110', '0111', '0112', '0113', '0114', '0115', '0116', '0117', '0118', '0119', '0120', '0121', '0122', '0123', '0124', '0125', '0126', '0127', '0128', '0129', '0130', '0131', '0132', '0133', '0134', '0135')
+and empresa in(select empresa from ns.empresas where empresa= any(empresa_nome)));
+
+delete from persona.rubricasponto WHERE evento IN (Select evento from persona.eventos where codigo not in ('0001',  '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009', '0010', '0011', '0012', '0013', '0014', '0015', '0016', '0017', '0018', '0019', '0020', '0021', '0022', '0023', '0024', '0025', '0026', '0027', '0028', '0029', '0030', '0031', '0032', '0033', '0034', '0035', '0036', '0037', '0038', '0039', '0040', '0041', '0042', '0043', '0044', '0045', '0046', '0047', '0048', '0049', '0050', '0051', '0052', '0053', '0054', '0055', '0056', '0057', '0058', '0059', '0060', '0061', '0062', '0063', '0064', '0065', '0066', '0067', '0068', '0069', '0070', '0071', '0072', '0073', '0074', '0075', '0076', '0077', '0078', '0079', '0080', '0081', '0082', '0083', '0084', '0085', '0086', '0087', '0088', '0089', '0090', '0091', '0092', '0093', '0094', '0095', '0096', '0097', '0098', '0099', '0100', '0101', '0102', '0103', '0104', '0105', '0106', '0107', '0108', '0109', '0110', '0111', '0112', '0113', '0114', '0115', '0116', '0117', '0118', '0119', '0120', '0121', '0122', '0123', '0124', '0125', '0126', '0127', '0128', '0129', '0130', '0131', '0132', '0133', '0134', '0135')
+and empresa in(select empresa from ns.empresas where empresa= any(empresa_nome)));
+
+delete from ns.valoresdefaultcontabilizacoes where empresa= any(empresa_nome);
+
+delete from persona.calculostrabalhadores where evento IN (Select evento from persona.eventos where empresa =  any(empresa_nome));
+
+delete from persona.calculostrabalhadores where lotacao IN (Select lotacao from persona.lotacoes where empresa =  any(empresa_nome));
+
+delete from persona.rubricasponto where evento IN (Select evento from persona.eventos where empresa =  any(empresa_nome));
+
+delete from persona.eventos where codigo in ('0001',  '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009', '0010', '0011', '0012', '0013', '0014', '0015', '0016', '0017', '0018', '0019', '0020', '0021', '0022', '0023', '0024', '0025', '0026', '0027', '0028', '0029', '0030', '0031', '0032', '0033', '0034', '0035', '0036', '0037', '0038', '0039', '0040', '0041', '0042', '0043', '0044', '0045', '0046', '0047', '0048', '0049', '0050', '0051', '0052', '0053', '0054', '0055', '0056', '0057', '0058', '0059', '0060', '0061', '0062', '0063', '0064', '0065', '0066', '0067', '0068', '0069', '0070', '0071', '0072', '0073', '0074', '0075', '0076', '0077', '0078', '0079', '0080', '0081', '0082', '0083', '0084', '0085', '0086', '0087', '0088', '0089', '0090', '0091', '0092', '0093', '0094', '0095', '0096', '0097', '0098', '0099', '0100', '0101', '0102', '0103', '0104', '0105', '0106', '0107', '0108', '0109', '0110', '0111', '0112', '0113', '0114', '0115', '0116', '0117', '0118', '0119', '0120', '0121', '0122', '0123', '0124', '0125', '0126', '0127', '0128', '0129', '0130', '0131', '0132', '0133', '0134', '0135')
+and empresa in(select empresa from ns.empresas where empresa= any(empresa_nome));
+
+
+delete FROM persona.planossaude 
+where empresa = any(empresa_nome);
+
+delete from persona.tiposfuncionarios
+where empresa = any(empresa_nome);
+
+delete from persona.historicosgps where empresa=any(empresa_nome);
+
+delete from persona.layoutsrelatoriosempresa where empresa=any(empresa_nome);
+
+delete from persona.configuracoesordemcalculomovimentos where empresa=any(empresa_nome);
+
+delete from persona.guiasprevidenciasocialempresas where empresa=any(empresa_nome);
+
+RAISE NOTICE '5/5';
+
+UPDATE persona.trabalhadores SET empresaanterior = NULL WHERE empresaanterior=any(empresa_nome);
+
+delete from scritta.grec_darf where imposto = 32 and documento like 'DARF %' and id_empresa=any(empresa_nome);
+
+RAISE NOTICE 'Persona SQL excluído';
+
+END; $$

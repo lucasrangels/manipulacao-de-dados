@@ -1,0 +1,111 @@
+DO $$
+
+DECLARE 
+empresa_nome UUID[];
+empresa_cod varchar[];
+
+begin
+
+--INSIRA O UUID DA EMPRESA ABAIXO
+empresa_nome = array['INSIRA O UUID AQUI']::uuid[];
+
+
+
+
+
+
+
+--Exclusão do Scritta
+
+empresa_cod = array(SELECT CODIGO FROM NS.EMPRESAS WHERE EMPRESA = any(empresa_nome))::varchar;
+
+RAISE NOTICE 'Excluindo Scritta SQL da(s) empresa(s) %', empresa_cod;
+
+delete from estoque.itens_mov where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos
+where empresa= any(empresa_nome));
+
+delete from contabilizacao.lancamentoscontabeis 
+where estabelecimento IN 
+(Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome)); 
+
+delete from scritta.lanaju where id_docfis IN (Select id from ns.df_docfis where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome)));
+
+delete from scritta.od_outdoc where id_gruout IN(Select id from scritta.od_gruout where id_empresa=any(empresa_nome));
+
+delete from scritta.od_gruout where id_empresa=any(empresa_nome);
+
+delete from scritta.sn_cfg where id_empresa=any(empresa_nome);
+
+delete from scritta.sped_planocontas where id_empresa=any(empresa_nome);
+
+delete from scritta.sped_custo where id_empresa=any(empresa_nome);
+
+delete from scritta.sped_defcontas where id_empresa=any(empresa_nome);
+
+delete from ns.bens where estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from financas.titulosreceberporvendedores where tituloreceber IN (Select id from financas.titulos where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome)));
+
+delete from financas.baixas where id_titulo IN (Select id from financas.titulos where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome)));
+
+delete from financas.itenschequespagamentos where id_titulo IN (Select id from financas.titulos where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome)));
+
+delete from financas.titulos where id_estabelecimento IN (select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from estoque.itens_mov where id_docfis IN (Select id from ns.df_docfis where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome)));
+
+delete from ns.df_itens where id_docfis IN (Select id from ns.df_docfis where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome)));
+
+delete from ns.df_servicos where id_docfis IN (Select id from ns.df_docfis where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome)));
+
+delete from ns.df_servicos where id_docfis IN (Select id from ns.df_docfis where id_grupodiferenciado IN (Select id from scritta.od_tipout where id_empresa=any(empresa_nome))); 
+
+delete from scritta.grec_gnre where id_docfis IN (Select id from ns.df_docfis where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome)));
+
+delete from scritta.df_nottra where id_docfis IN (Select id from ns.df_docfis where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome)));
+
+RAISE NOTICE 'Iniciada a exclusão dos documentos fiscais(df_docfis). Esse processo pode levar alguns minutos ou horas...';
+
+delete from ns.df_docfis where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from ns.df_docfis where id_grupodiferenciado IN (Select id from scritta.od_tipout where id_empresa=any(empresa_nome)); 
+
+RAISE NOTICE 'Finalizada a exclusão dos documentos fiscais';
+
+delete from scritta.df_sertra where id_docfis IN (Select id from ns.df_docfis where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome)));
+
+delete from contabilizacao.lancamentoscontabeis where estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from scritta.grec_gnre where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos
+where empresa= any(empresa_nome));
+
+
+delete from estoque.itens_mov where localdeestoque IN (Select localdeestoque from estoque.locaisdeestoques where estabelecimento IN ( Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome)));
+
+delete from scritta.saldocredor where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from scritta.grec_resumo where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from scritta.grec_darf where imposto != 32 and documento not like 'DARF %' and id_empresa=any(empresa_nome);
+
+delete from scritta.pendencias where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from contabilizacao.pendencias where estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from contabilizacao.lotes where estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from scritta.lanaju where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from scritta.grec_icms_iss where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from scritta.grec_cfg where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from scritta.uniprofissionais where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));	
+
+delete from scritta.grec_darf where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from scritta.inv_contas where id_estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));	
+
+delete from scritta.od_tipout where id_empresa=any(empresa_nome);
+
+RAISE NOTICE 'Scritta SQL excluído com sucesso';

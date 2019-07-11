@@ -1,0 +1,92 @@
+DO $$
+
+DECLARE 
+empresa_nome UUID[];
+empresa_cod varchar[];
+
+begin
+
+--INSIRA O UUID DA EMPRESA ABAIXO
+empresa_nome = array['INSIRA O UUID AQUI']::uuid[];
+
+
+
+
+
+
+
+--Exclusão do Contábil
+
+empresa_cod = array(SELECT CODIGO FROM NS.EMPRESAS WHERE EMPRESA = any(empresa_nome))::varchar;
+
+RAISE NOTICE 'Excluindo Contábil SQL da(s) empresa(s) %', empresa_cod;
+
+alter table contabil.saldos disable trigger all;
+
+alter table contabil.lancamentosabertos disable trigger all;
+
+alter table contabil.contasanuais disable trigger all;
+
+RAISE NOTICE '1/3';
+
+delete from contabil.vwcontasanaliticas_cache where empresa = any(empresa_nome);
+
+delete from contabil.vwcontasanaliticas_cache where conta IN (Select conta from contabil.contas where empresa=any(empresa_nome));
+
+delete from contabil.extratosbancarios where estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from contabil.loteslancamentos where estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from contabil.configuracoescontasbens where contabem IN (Select conta from contabil.contas where empresa=any(empresa_nome));
+
+delete from ns.bens where estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome) AND scritta IS FALSE);
+
+delete from contabil.dmpllancamentos where lancamento IN (select lancamento from contabil.lancamentos where estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa= any(empresa_nome)));
+
+delete from contabil.lancamentos where estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from contabil.centrosdecustoanuais where centrodecusto IN (Select centrodecusto from contabil.centrosdecusto where empresa=any(empresa_nome));
+
+delete from contabil.centrosdecusto where empresa=any(empresa_nome);
+
+RAISE NOTICE '2/3';
+
+delete from contabil.signatarios where estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from contabil.classificacaocontas where empresa=any(empresa_nome); 
+
+delete from contabil.lancamentospadrao where empresa=any(empresa_nome);
+
+delete from contabil.lancamentos where estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from contabil.lancamentos where contacredito IN (Select contaanual from contabil.contasanuais where conta IN (Select conta from contabil.contas where empresa=any(empresa_nome)));
+
+delete from contabil.contasanuais where conta IN (Select conta from contabil.contas where empresa=any(empresa_nome));
+
+delete from contabil.configuracoesfluxodecaixa where conta IN (Select conta from contabil.contas where empresa=any(empresa_nome));
+
+delete from contabil.bensocorrencias where conta IN (Select conta from contabil.contas where empresa=any(empresa_nome));
+
+delete from ns.bens where contaaquisicao IN (Select conta from contabil.contas where empresa=any(empresa_nome));
+
+delete from contabil.contas where empresa=any(empresa_nome);
+
+delete from contabil.contasreferenciais where mae IN (Select contamae from contabil.contas where empresa=any(empresa_nome));
+
+RAISE NOTICE '3/3';
+
+delete from contabil.saldos where estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from contabil.lancamentosabertos where estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+delete from contabil.lancamentosabertos where estabelecimento IN (Select estabelecimento from ns.estabelecimentos where empresa=any(empresa_nome));
+
+alter table contabil.saldos enable trigger all;
+
+alter table contabil.lancamentosabertos enable trigger all;
+
+alter table contabil.contasanuais enable trigger all;
+
+RAISE NOTICE 'Contábil SQL excluído';
+
+END; $$
